@@ -1,0 +1,5 @@
+vendor/
+.idea/
+*.json
+config.php
+!composer.json
