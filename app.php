@@ -48,9 +48,12 @@ foreach ($teamDriveList as $teamDrive) {
                 if ($permission->getEmailAddress() === $mail) {
                     if ($permission->getTeamDrivePermissionDetails()[0]->getRole() !== $role) {
                         echo 'Updating ' . $mail . ' for Teamdrive ' . $name . "\n";
-                        $permission->getTeamDrivePermissionDetails()[0]->setRole($role);
+
+                        $newPermission = new Google_Service_Drive_Permission();
+                        $newPermission->setRole($role);
+
                         $driveService->permissions->update($id, $permission->getId(),
-                            $permission, [
+                            $newPermission, [
                                 'supportsTeamDrives' => true,
                             ]);
                     }
