@@ -6,5 +6,10 @@ return [
     'users' => [
         'foo@bar.com' => 'organizer',
     ],
+    'blacklist' => [
+        'Teamdrive Name' => [
+            'bar@foo.com'
+        ]
+    ],
     'teamdriveNameBegin' => ''
 ];

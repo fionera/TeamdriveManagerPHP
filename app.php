@@ -5,6 +5,7 @@ $config = include 'config.php';
 putenv('GOOGLE_APPLICATION_CREDENTIALS=' . $config['serviceAccountFile']);
 
 $users = $config['users'];
+$blacklist = $config['blacklist'];
 
 $client = new Google_Client();
 $client->useApplicationDefaultCredentials();
@@ -21,6 +22,8 @@ $teamDriveList = $driveService->teamdrives->listTeamdrives([
 foreach ($teamDriveList as $teamDrive) {
     $name = $teamDrive->getName();
     $id = $teamDrive->getId();
+    $currentBlacklist = $blacklist[$name] ?? [];
+
     if (strpos($name, $config['teamdriveNameBegin']) === 0) {
 
         $permissions = $driveService->permissions->listPermissions($id, [
@@ -43,6 +46,10 @@ foreach ($teamDriveList as $teamDrive) {
         unset($permissionList);
 
         foreach ($users as $mail => $role) {
+            if (in_array($mail, $currentBlacklist, true)) {
+                continue;
+            }
+
             foreach ($permissions as $permission) {
                 if ($permission->getEmailAddress() === $mail) {
                     if ($permission->getTeamDrivePermissionDetails()[0]->getRole() !== $role) {
@@ -74,8 +81,9 @@ foreach ($teamDriveList as $teamDrive) {
         }
 
         foreach ($permissions as $permission) {
-            if (!array_key_exists($permission->getEmailAddress(), $users)) {
-                echo 'Deleting ' . $permission->getEmailAddress() . ' for Teamdrive ' . $name . "\n";
+            $mail = $permission->getEmailAddress();
+            if (!array_key_exists($mail, $users) || in_array($mail, $currentBlacklist, true)) {
+                echo 'Deleting ' . $mail . ' for Teamdrive ' . $name . "\n";
                 $driveService->permissions->delete($id, $permission->getId(), [
                     'supportsTeamDrives' => true,
                 ]);
