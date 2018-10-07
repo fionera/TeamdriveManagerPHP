@@ -28,20 +28,19 @@ foreach ($teamDriveList as $teamDrive) {
         ]);
 
         echo 'Getting Permissions for ' . $name . "\n";
-        $client->setUseBatch(true);
-        $permissionBatch = new Google_Http_Batch($client);
+        $permissionList = [];
         /** @var Google_Service_Drive_Permission $permission */
         foreach ($permissions as $permission) {
             /** @noinspection PhpParamsInspection */
-            $permissionBatch->add($driveService->permissions->get($id, $permission->getId(), [
+            $permissionList[] = $driveService->permissions->get($id, $permission->getId(), [
                 'supportsTeamDrives' => true,
                 'fields' => 'kind,id,emailAddress,domain,role,allowFileDiscovery,displayName,photoLink,expirationTime,teamDrivePermissionDetails,deleted'
-            ]));
+            ]);
         }
         /** @noinspection AlterInForeachInspection */
         unset($permission);
-        $permissions = $permissionBatch->execute();
-        $client->setUseBatch(false);
+        $permissions = $permissionList;
+        unset($permissionList);
 
         foreach ($users as $mail => $role) {
             foreach ($permissions as $permission) {
