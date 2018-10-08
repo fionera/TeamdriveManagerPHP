@@ -11,3 +11,5 @@
  - ```php app.php```
 ### Rclone config creation
  - ```php app.php rclone```
+### Teamdrive creation
+ - ```php app.php create TEAMDRIVENAME```
