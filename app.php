@@ -166,14 +166,17 @@ function getRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive)
     return str_replace([' - ', ' / ', '/', '-'], ['_', '_', '', ''], $teamDrive->getName());
 }
 
-function getFilteredTeamdrives($teamdrives, string $teamdriveNameBegin)
+function getFilteredTeamdrives(Google_Service_Drive_TeamDriveList $teamdrives, string $teamdriveNameBegin)
 {
-    /** @noinspection PhpParamsInspection */
-    return array_map(function (Google_Service_Drive_TeamDrive $teamDrive) use ($teamdriveNameBegin) {
-        if (strpos($teamDrive->getName(), $teamdriveNameBegin) === 0) {
-            return $teamDrive;
+    $drives = [];
+
+    foreach ($teamdrives as $teamdrive) {
+        if (strpos($teamdrive->getName(), $teamdriveNameBegin) === 0) {
+            $drives[] = $teamdrive;
         }
-    }, $teamdrives);
+    }
+
+    return $drives;
 }
 
 if ($argc > 1) {
@@ -190,7 +193,7 @@ if ($argc > 1) {
     if ($argv[1] === 'create') {
         $teamDrive = new Google_Service_Drive_TeamDrive();
         $teamDrive->setName($argv[2]);
-        $requestId = random_int(1,10000000);
+        $requestId = random_int(1, 10000000);
         $teamDrive = $driveService->teamdrives->create($requestId, $teamDrive);
         echo 'Created Teamdrive ' . $teamDrive->getName() . "\n";
     }
