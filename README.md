@@ -1,8 +1,13 @@
 # Teamdrive Manager
 ## Setup
  - Download
- - "composer install"
+ - ```composer install```
  - Copy config.dist.php to config.php
  - Edit config.php to your needs
- - "php app.php"
  
+ 
+## Usage
+### Normal
+ - ```php app.php```
+### Rclone config creation
+ - ```php app.php rclone```

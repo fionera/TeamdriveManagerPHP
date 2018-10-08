@@ -3,3 +3,4 @@ vendor/
 *.json
 config.php
 !composer.json
+rclone.conf
