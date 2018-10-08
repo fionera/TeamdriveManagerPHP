@@ -166,21 +166,43 @@ function getRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive)
     return str_replace([' - ', ' / ', '/', '-'], ['_', '_', '', ''], $teamDrive->getName());
 }
 
-/** @var Google_Service_Drive_TeamDrive $teamDrive */
-foreach ($teamDriveList as $teamDrive) {
-    if (strpos($teamDrive->getName(), $config['teamdriveNameBegin']) === 0) {
-        if ($argc > 1) {
-            if ($argv[1] === 'rclone') {
-                file_put_contents('rclone.conf', createRcloneConfig($teamDrive), FILE_APPEND);
-            }
-        } else {
-            $permissions = getPermissionsForDrive($driveService, $teamDrive);
-
-            foreach ($users as $user) {
-                setPermissionsForUser($user, $permissions, $teamDrive, $driveService);
-            }
-
-            deleteOrphanedPermissions($permissions, $users, $teamDrive, $driveService);
+function getFilteredTeamdrives($teamdrives, string $teamdriveNameBegin)
+{
+    /** @noinspection PhpParamsInspection */
+    return array_map(function (Google_Service_Drive_TeamDrive $teamDrive) use ($teamdriveNameBegin) {
+        if (strpos($teamDrive->getName(), $teamdriveNameBegin) === 0) {
+            return $teamDrive;
         }
+    }, $teamdrives);
+}
+
+if ($argc > 1) {
+
+    if ($argv[1] === 'rclone') {
+        $rcloneConfigString = '';
+        foreach (getFilteredTeamdrives($teamDriveList, $config['teamdriveNameBegin']) as $teamDrive) {
+            $rcloneConfigString .= createRcloneConfig($teamDrive);
+        }
+
+        file_put_contents('rclone.conf', $rcloneConfigString);
+    }
+
+    if ($argv[1] === 'create') {
+        $teamDrive = new Google_Service_Drive_TeamDrive();
+        $teamDrive->setName($argv[2]);
+        $requestId = random_int(1,10000000);
+        $teamDrive = $driveService->teamdrives->create($requestId, $teamDrive);
+        echo 'Created Teamdrive ' . $teamDrive->getName() . "\n";
+    }
+} else {
+    /** @var Google_Service_Drive_TeamDrive $teamDrive */
+    foreach (getFilteredTeamdrives($teamDriveList, $config['teamdriveNameBegin']) as $teamDrive) {
+        $permissions = getPermissionsForDrive($driveService, $teamDrive);
+
+        foreach ($users as $user) {
+            setPermissionsForUser($user, $permissions, $teamDrive, $driveService);
+        }
+
+        deleteOrphanedPermissions($permissions, $users, $teamDrive, $driveService);
     }
 }
