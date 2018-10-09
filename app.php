@@ -143,7 +143,7 @@ function deleteOrphanedPermissions(array $permissions, array $users, Google_Serv
     }
 }
 
-function createRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive)
+function createRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive, string $fileName)
 {
     $name = getRcloneConfig($teamDrive);
 
@@ -154,7 +154,7 @@ client_id =
 client_secret =
 scope = drive
 root_folder_id =
-service_account_file = SERVICE_ACCOUNT_FILE
+service_account_file = $fileName
 team_drive = $teamDrive->id
 
 
@@ -163,7 +163,7 @@ EOF;
 
 function getRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive)
 {
-    return str_replace([' - ', ' / ', '/', '-'], ['_', '_', '', ''], $teamDrive->getName());
+    return str_replace([' - ', ' / ', ' ', '/', '-'], ['_', '_', '_', '', ''], $teamDrive->getName());
 }
 
 function getFilteredTeamdrives(Google_Service_Drive_TeamDriveList $teamdrives, string $teamdriveNameBegin)
@@ -182,9 +182,15 @@ function getFilteredTeamdrives(Google_Service_Drive_TeamDriveList $teamdrives, s
 if ($argc > 1) {
 
     if ($argv[1] === 'rclone') {
+        if ($argc === 3) {
+            $fileName = $argv[2];
+        } else {
+            $fileName = $config['serviceAccountFile'];
+        }
+
         $rcloneConfigString = '';
         foreach (getFilteredTeamdrives($teamDriveList, $config['teamdriveNameBegin']) as $teamDrive) {
-            $rcloneConfigString .= createRcloneConfig($teamDrive);
+            $rcloneConfigString .= createRcloneConfig($teamDrive, $fileName);
         }
 
         file_put_contents('rclone.conf', $rcloneConfigString);
