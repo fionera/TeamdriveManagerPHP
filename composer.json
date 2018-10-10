@@ -1,5 +1,7 @@
 {
     "require": {
-        "google/apiclient": "^2.2"
+        "google/apiclient": "^2.2",
+        "clue/mq-react": "^1.1",
+        "react/event-loop": "^1.0"
     }
 }
