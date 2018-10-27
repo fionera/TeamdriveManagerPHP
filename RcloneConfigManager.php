@@ -38,6 +38,6 @@ EOF;
 
     public function getRcloneEntryName(Google_Service_Drive_TeamDrive $teamDrive)
     {
-        return str_replace([' - ', ' / ', ' ', '/', '-'], ['_', '_', '_', '', ''], $teamDrive->getName());
+        return str_replace([' - ', ' / ', '/', '-', ' '], ['_', '_', '', '', '-'], $teamDrive->getName());
     }
 }

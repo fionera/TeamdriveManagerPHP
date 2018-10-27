@@ -24,9 +24,24 @@ class GoogleRequestQueue
     {
         $this->driveService = $drive_service;
 
-        $this->queue = new Queue(10, null, function (RequestInterface $request) {
-            return new \React\Promise\Promise(function (callable $resolve) use ($request) {
+        $this->queue = new Queue(10, null, function (RequestInterface $request, bool $streamRequest = false) {
+            return new \React\Promise\Promise(function (callable $resolve) use ($request, $streamRequest) {
+
+                if ($streamRequest) {
+                    $originalClient = $this->driveService->getClient()->getHttpClient();
+
+                    $guzzleClient = new \GuzzleHttp\Client([
+                        'stream' => true
+                    ]);
+
+                    $this->driveService->getClient()->setHttpClient($guzzleClient);
+                }
+
                 $response = $this->driveService->getClient()->execute($request);
+
+                if ($streamRequest) {
+                    $this->driveService->getClient()->setHttpClient($originalClient);
+                }
 
                 if ($response instanceof Exception) {
                     var_dump($response);
@@ -41,6 +56,12 @@ class GoogleRequestQueue
     {
         $queue = $this->queue;
         return $queue($request);
+    }
+
+    public function queueStreamRequest(RequestInterface $request): PromiseInterface
+    {
+        $queue = $this->queue;
+        return $queue($request, true);
     }
 
     public function updatePermission(User $user, Google_Service_Drive_TeamDrive $teamDrive, Google_Service_Drive_Permission $permission): PromiseInterface
@@ -171,4 +192,48 @@ class GoogleRequestQueue
         return $this->queueRequest($request);
     }
 
+
+    public function getFileInformation(string $fileID): PromiseInterface
+    {
+        /** @var \GuzzleHttp\Psr7\Request $request */
+        $request = $this->driveService->files->get($fileID, [
+            'supportsTeamDrives' => true
+        ]);
+
+        return $this->queueRequest($request);
+    }
+
+    public function downloadFile(string $fileID): PromiseInterface
+    {
+        /** @var \GuzzleHttp\Psr7\Request $request */
+        $request = $this->driveService->files->get($fileID, [
+            'supportsTeamDrives' => true,
+            'alt' => 'media',
+        ]);
+
+        return $this->queueStreamRequest($request);
+    }
+
+    public function createFileCopy(string $fileID): PromiseInterface
+    {
+        /** @var \GuzzleHttp\Psr7\Request $request */
+        $request = $this->driveService->files->copy($fileID,
+            new Google_Service_Drive_DriveFile(),
+            [
+                'supportsTeamDrives' => true,
+            ]);
+
+        return $this->queueRequest($request);
+    }
+
+    public function deleteFile(string $fileID): PromiseInterface
+    {
+        /** @var \GuzzleHttp\Psr7\Request $request */
+        $request = $this->driveService->files->delete($fileID,
+            [
+                'supportsTeamDrives' => true,
+            ]);
+
+        return $this->queueRequest($request);
+    }
 }

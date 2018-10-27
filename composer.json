@@ -2,6 +2,8 @@
     "require": {
         "google/apiclient": "^2.2",
         "clue/mq-react": "^1.1",
-        "react/event-loop": "^1.0"
+        "react/event-loop": "^1.0",
+        "react/stream": "^1.0",
+        "symfony/console": "^4.1"
     }
 }

@@ -1,4 +1,4 @@
-# Teamdrive Manager
+# Teamdrive Manager (with extra Features)
 ## Setup
  - Download
  - ```composer install```
@@ -7,9 +7,11 @@
  
  
 ## Usage
-### Normal
- - ```php app.php```
+### Downloading a File
+ - ```php app.php download FILEID```
 ### Rclone config creation
  - ```php app.php rclone```
+### Assigning the Roles
+ - ```php app.php td```
 ### Teamdrive creation
- - ```php app.php create TEAMDRIVENAME```
+ - ```php app.php td create TEAMDRIVENAME```
