@@ -29,10 +29,15 @@ $googleRequestQueue = new GoogleRequestQueue($driveService);
 $teamDriveManager = new TeamDriveManager($googleRequestQueue, $users);
 $cloneConfigManager = new RcloneConfigManager();
 
-function getFileID(string $string) {
-    $parsed = parse_url($string)['path'];
+function getFileID(string $string)
+{
+    $parsed = parse_url($string);
 
-    return str_replace(['/file/d/','/view'], '', $parsed);
+    if (isset($parsed['query'])) {
+        return str_replace('id=', '', $parsed['query']);
+    }
+
+    return str_replace(['/file/d/', '/view'], '', $parsed['path']);
 }
 
 if ($argv[1] === 'rclone') {
