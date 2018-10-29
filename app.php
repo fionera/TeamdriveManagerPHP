@@ -2,7 +2,6 @@
 
 use GuzzleHttp\Psr7\Response;
 
-
 require_once 'vendor/autoload.php';
 require_once 'User.php';
 require_once 'GoogleRequestQueue.php';
@@ -30,6 +29,12 @@ $googleRequestQueue = new GoogleRequestQueue($driveService);
 $teamDriveManager = new TeamDriveManager($googleRequestQueue, $users);
 $cloneConfigManager = new RcloneConfigManager();
 
+function getFileID(string $string) {
+    $parsed = parse_url($string)['path'];
+
+    return str_replace(['/file/d/','/view'], '', $parsed);
+}
+
 if ($argv[1] === 'rclone') {
     if ($argc === 3) {
         $serviceAccountFileName = $argv[2];
@@ -53,7 +58,15 @@ function downloadFile(Response $response, Google_Service_Drive_DriveFile $fileIn
     $output = new \Symfony\Component\Console\Output\ConsoleOutput();
     $progressBar = new \Symfony\Component\Console\Helper\ProgressBar($output);
 
-    $file = fopen($fileInformation->getName(), 'xb');
+    if (!is_dir('downloads') && !mkdir('downloads') && !is_dir('downloads')) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'downloads'));
+    }
+
+    $file = fopen('downloads/' . $fileInformation->getName(), 'xb');
+
+    if ($file === false) {
+        die('An error occurred');
+    }
 
     $stream = $response->getBody();
 
@@ -74,7 +87,11 @@ function downloadFile(Response $response, Google_Service_Drive_DriveFile $fileIn
 }
 
 if ($argv[1] === 'download') {
-    $fileID = $argv[2];
+    if (!isset($argv[2])) {
+        die('No fileID or Url given');
+    }
+
+    $fileID = getFileID($argv[2]);
 
     echo 'Requesting File Informations' . "\n";
     $googleRequestQueue->getFileInformation($fileID)->then(function (Google_Service_Drive_DriveFile $fileInformation) use ($googleRequestQueue) {
