@@ -1,5 +1,7 @@
 <?php
 
+namespace TeamdriveManager\Struct;
+
 class User
 {
     public $mail;

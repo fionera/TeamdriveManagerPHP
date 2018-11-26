@@ -1,0 +1,16 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: true
+    bind:
+      $users: '%users%'
+      $config: '%config%'
+
+  _instanceof:
+    Symfony\Component\Console\Command\Command:
+      tags: ['console.command']
+
+  TeamdriveManager\:
+    resource: '../src/*'
+    exclude: '../src/{Struct}'

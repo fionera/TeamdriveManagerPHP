@@ -1,11 +1,17 @@
 <?php
 
-class TeamDriveManager
+namespace TeamdriveManager\Service;
+
+use Google_Service_Drive_Permission;
+use Google_Service_Drive_TeamDrive;
+use TeamdriveManager\Struct\User;
+
+class TeamDriveService
 {
     /**
-     * @var GoogleRequestQueue
+     * @var GoogleDriveService
      */
-    private $googleRequestQueue;
+    private $driveService;
     /**
      * @var User[]
      */
@@ -13,18 +19,18 @@ class TeamDriveManager
 
     /**
      * TeamDriveManager constructor.
-     * @param GoogleRequestQueue $googleRequestQueue
+     * @param GoogleDriveService $driveService
      * @param array $users
      */
-    public function __construct(GoogleRequestQueue $googleRequestQueue, array $users)
+    public function __construct(GoogleDriveService $driveService, array $users)
     {
-        $this->googleRequestQueue = $googleRequestQueue;
+        $this->driveService = $driveService;
         $this->users = $users;
     }
 
     public function checkPermissionsForTeamDrive(Google_Service_Drive_TeamDrive $teamDrive): void
     {
-        $this->googleRequestQueue->getPermissionArray($teamDrive)->then(function (array $permissions) use ($teamDrive) {
+        $this->driveService->getPermissionArray($teamDrive)->then(function (array $permissions) use ($teamDrive) {
             /** @var $permissions Google_Service_Drive_Permission[] */
             foreach ($permissions as $permission) {
                 $user = $this->getUserForEmail($permission->getEmailAddress());
@@ -43,7 +49,7 @@ class TeamDriveManager
     public function checkPermissionForUserAndTeamDrive(?User $user, Google_Service_Drive_TeamDrive $teamDrive, ?Google_Service_Drive_Permission $permission): void
     {
         if ($permission === null && $user !== null) {
-            $this->googleRequestQueue->createPermission($user, $teamDrive)->then(function () use ($user, $teamDrive) {
+            $this->driveService->createPermission($user, $teamDrive)->then(function () use ($user, $teamDrive) {
                 echo 'Created Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             }, function () use ($user, $teamDrive) {
                 echo 'Error while creating Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
@@ -54,7 +60,7 @@ class TeamDriveManager
 
         if ($permission !== null && $user !== null) {
             if ($permission->getRole() !== $user->role) {
-                $this->googleRequestQueue->updatePermission($user, $teamDrive, $permission)->then(function () use ($user, $teamDrive) {
+                $this->driveService->updatePermission($user, $teamDrive, $permission)->then(function () use ($user, $teamDrive) {
                     echo 'Updated Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
                 }, function () use ($user, $teamDrive) {
                     echo 'Error while updating Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
@@ -65,7 +71,7 @@ class TeamDriveManager
         }
 
         if ($permission !== null) {
-            $this->googleRequestQueue->deletePermission($teamDrive, $permission)->then(function () use ($teamDrive, $permission) {
+            $this->driveService->deletePermission($teamDrive, $permission)->then(function () use ($teamDrive, $permission) {
                 echo 'Deleted Permission for User ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             }, function () use ($permission, $teamDrive) {
                 echo 'Error while deleting Permission for User ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
@@ -103,7 +109,7 @@ class TeamDriveManager
 
     private function isUserExcludedFromTeamDrive(User $user, string $teamDriveName): bool
     {
-        return in_array($teamDriveName, $user->excluded, true);
+        return \in_array($teamDriveName, $user->excluded, true);
     }
 
     private function getUserForEmail(string $email): ?User

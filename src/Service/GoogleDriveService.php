@@ -1,67 +1,38 @@
 <?php declare(strict_types=1);
 
-use Clue\React\Mq\Queue;
-use Psr\Http\Message\RequestInterface;
-use React\Promise\PromiseInterface;
+namespace TeamdriveManager\Service;
 
-class GoogleRequestQueue
+use Exception;
+use Google_Service_Drive;
+use Google_Service_Drive_DriveFile;
+use Google_Service_Drive_Permission;
+use Google_Service_Drive_PermissionList;
+use Google_Service_Drive_TeamDrive;
+use Google_Service_Drive_TeamDriveList;
+use React\Promise\PromiseInterface;
+use TeamdriveManager\Struct\User;
+
+class GoogleDriveService
 {
 
-    /**
-     * @var Queue
-     */
-    private $queue;
     /**
      * @var Google_Service_Drive
      */
     private $driveService;
+    /**
+     * @var RequestQueue
+     */
+    private $requestQueue;
 
     /**
      * GoogleRequestQueue constructor.
      * @param Google_Service_Drive $drive_service
+     * @param RequestQueue $requestQueue
      */
-    public function __construct(Google_Service_Drive $drive_service)
+    public function __construct(Google_Service_Drive $drive_service, RequestQueue $requestQueue)
     {
         $this->driveService = $drive_service;
-
-        $this->queue = new Queue(10, null, function (RequestInterface $request, bool $streamRequest = false) {
-            return new \React\Promise\Promise(function (callable $resolve) use ($request, $streamRequest) {
-
-                if ($streamRequest) {
-                    $originalClient = $this->driveService->getClient()->getHttpClient();
-
-                    $guzzleClient = new \GuzzleHttp\Client([
-                        'stream' => true
-                    ]);
-
-                    $this->driveService->getClient()->setHttpClient($guzzleClient);
-                }
-
-                $response = $this->driveService->getClient()->execute($request);
-
-                if ($streamRequest) {
-                    $this->driveService->getClient()->setHttpClient($originalClient);
-                }
-
-                if ($response instanceof Exception) {
-                    var_dump($response);
-                }
-
-                $resolve($response);
-            });
-        });
-    }
-
-    public function queueRequest(RequestInterface $request): PromiseInterface
-    {
-        $queue = $this->queue;
-        return $queue($request);
-    }
-
-    public function queueStreamRequest(RequestInterface $request): PromiseInterface
-    {
-        $queue = $this->queue;
-        return $queue($request, true);
+        $this->requestQueue = $requestQueue;
     }
 
     public function updatePermission(User $user, Google_Service_Drive_TeamDrive $teamDrive, Google_Service_Drive_Permission $permission): PromiseInterface
@@ -77,7 +48,7 @@ class GoogleRequestQueue
                 'supportsTeamDrives' => true,
             ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function createPermission(User $user, Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
@@ -95,7 +66,7 @@ class GoogleRequestQueue
                 'sendNotificationEmail' => false,
             ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function deletePermission(Google_Service_Drive_TeamDrive $teamDrive, Google_Service_Drive_Permission $permission): PromiseInterface
@@ -107,7 +78,7 @@ class GoogleRequestQueue
             'supportsTeamDrives' => true,
         ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
 
     }
 
@@ -121,7 +92,7 @@ class GoogleRequestQueue
             'fields' => 'kind,id,emailAddress,domain,role,allowFileDiscovery,displayName,photoLink,expirationTime,teamDrivePermissionDetails,deleted'
         ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function getPermissionList(Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
@@ -133,7 +104,7 @@ class GoogleRequestQueue
             'supportsTeamDrives' => true,
         ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function getPermissionArray(Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
@@ -161,7 +132,7 @@ class GoogleRequestQueue
             'pageSize' => $pageSize
         ]);
 
-        return $this->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) use ($filter) {
+        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) use ($filter) {
             $filteredDriveList = [];
             foreach ($teamDriveList as $teamDrive) {
                 if ($filter($teamDrive) === true) {
@@ -189,7 +160,7 @@ class GoogleRequestQueue
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->teamdrives->create($requestId, $teamDrive);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
 
@@ -200,7 +171,7 @@ class GoogleRequestQueue
             'supportsTeamDrives' => true
         ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function downloadFile(string $fileID): PromiseInterface
@@ -211,7 +182,7 @@ class GoogleRequestQueue
             'alt' => 'media',
         ]);
 
-        return $this->queueStreamRequest($request);
+        return $this->requestQueue->queueStreamRequest($request);
     }
 
     public function createFileCopy(string $fileID): PromiseInterface
@@ -223,7 +194,7 @@ class GoogleRequestQueue
                 'supportsTeamDrives' => true,
             ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 
     public function deleteFile(string $fileID): PromiseInterface
@@ -234,6 +205,6 @@ class GoogleRequestQueue
                 'supportsTeamDrives' => true,
             ]);
 
-        return $this->queueRequest($request);
+        return $this->requestQueue->queueRequest($request);
     }
 }

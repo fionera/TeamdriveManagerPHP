@@ -1,9 +1,17 @@
 {
-    "require": {
-        "google/apiclient": "^2.2",
-        "clue/mq-react": "^1.1",
-        "react/event-loop": "^1.0",
-        "react/stream": "^1.0",
-        "symfony/console": "^4.1"
+  "require": {
+    "google/apiclient": "^2.2",
+    "clue/mq-react": "^1.1",
+    "react/event-loop": "^1.0",
+    "react/stream": "^1.0",
+    "symfony/console": "^4.1",
+    "symfony/dependency-injection": "^4.1",
+    "symfony/config": "^4.1",
+    "symfony/yaml": "^4.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "TeamdriveManager\\": "src/"
     }
+  }
 }
