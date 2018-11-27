@@ -7,11 +7,9 @@
  
  
 ## Usage
-### Downloading a File
- - ```php app.php download FILEID```
-### Rclone config creation
- - ```php app.php rclone```
-### Assigning the Roles
- - ```php app.php td```
+### Assigning directly to the TD
+ - ```php app.php assign:mail```
+### Assigning over Groups
+ - ```php app.php assign:group```
 ### Teamdrive creation
- - ```php app.php td create TEAMDRIVENAME```
+ - ```php app.php td:create```
