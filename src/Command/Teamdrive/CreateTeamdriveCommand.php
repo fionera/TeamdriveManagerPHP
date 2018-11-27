@@ -10,7 +10,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
-use TeamdriveManager\Service\TeamDriveService;
 
 class CreateTeamdriveCommand extends Command
 {
@@ -20,16 +19,11 @@ class CreateTeamdriveCommand extends Command
      * @var GoogleDriveService
      */
     private $googleDriveService;
-    /**
-     * @var TeamDriveService
-     */
-    private $teamDriveService;
 
-    public function __construct(GoogleDriveService $googleDriveService, TeamDriveService $teamDriveService)
+    public function __construct(GoogleDriveService $googleDriveServiceService)
     {
         parent::__construct();
-        $this->googleDriveService = $googleDriveService;
-        $this->teamDriveService = $teamDriveService;
+        $this->googleDriveService = $googleDriveServiceService;
     }
 
 
@@ -47,13 +41,6 @@ class CreateTeamdriveCommand extends Command
         $name = $io->ask('Teamdrive Name');
 
         $this->googleDriveService->createTeamDrive($name)->then(function () use ($name) {
-            $this->googleDriveService->getTeamDriveList(function ($teamDriveName) use ($name) {
-                return $teamDriveName === $name;
-            })->then(function (array $teamDriveArray) {
-                foreach ($teamDriveArray as $teamDrive) {
-                    $this->teamDriveService->checkPermissionsForTeamDrive($teamDrive);
-                }
-            });
         });
     }
 }

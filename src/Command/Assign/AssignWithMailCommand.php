@@ -1,34 +1,54 @@
 <?php
 
-namespace TeamdriveManager\Service;
+
+namespace TeamdriveManager\Command\Assign;
+
 
 use Google_Service_Drive_Permission;
 use Google_Service_Drive_TeamDrive;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use TeamdriveManager\Service\GoogleDriveService;
 use TeamdriveManager\Struct\User;
 
-class TeamDriveService
+class AssignWithMailCommand extends Command
 {
+    protected static $defaultName = 'assign:mail';
     /**
      * @var GoogleDriveService
      */
     private $driveService;
     /**
-     * @var User[]
+     * @var array
+     */
+    private $config;
+    /**
+     * @var array
      */
     private $users;
 
-    /**
-     * TeamDriveManager constructor.
-     * @param GoogleDriveService $driveService
-     * @param array $users
-     */
-    public function __construct(GoogleDriveService $driveService, array $users)
+    public function __construct(GoogleDriveService $driveService, array $config, array $users)
     {
+        parent::__construct();
         $this->driveService = $driveService;
+        $this->config = $config;
         $this->users = $users;
     }
 
-    public function checkPermissionsForTeamDrive(Google_Service_Drive_TeamDrive $teamDrive): void
+    public function run(InputInterface $input, OutputInterface $output)
+    {
+        $this->driveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+            return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
+        })->then(function (array $teamDriveArray) {
+            foreach ($teamDriveArray as $teamDrive) {
+                $this->checkPermissionsForTeamDrive($teamDrive);
+            }
+        });
+    }
+
+
+    private function checkPermissionsForTeamDrive(Google_Service_Drive_TeamDrive $teamDrive): void
     {
         $this->driveService->getPermissionArray($teamDrive)->then(function (array $permissions) use ($teamDrive) {
             /** @var $permissions Google_Service_Drive_Permission[] */
@@ -46,10 +66,10 @@ class TeamDriveService
         });
     }
 
-    public function checkPermissionForUserAndTeamDrive(?User $user, Google_Service_Drive_TeamDrive $teamDrive, ?Google_Service_Drive_Permission $permission): void
+    private function checkPermissionForUserAndTeamDrive(?User $user, Google_Service_Drive_TeamDrive $teamDrive, ?Google_Service_Drive_Permission $permission): void
     {
         if ($permission === null && $user !== null) {
-            $this->driveService->createPermission($user, $teamDrive)->then(function () use ($user, $teamDrive) {
+            $this->driveService->createPermissionForUser($user, $teamDrive)->then(function () use ($user, $teamDrive) {
                 echo 'Created Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             }, function () use ($user, $teamDrive) {
                 echo 'Error while creating Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
@@ -60,7 +80,7 @@ class TeamDriveService
 
         if ($permission !== null && $user !== null) {
             if ($permission->getRole() !== $user->role) {
-                $this->driveService->updatePermission($user, $teamDrive, $permission)->then(function () use ($user, $teamDrive) {
+                $this->driveService->updatePermissionForUser($user, $teamDrive, $permission)->then(function () use ($user, $teamDrive) {
                     echo 'Updated Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";
                 }, function () use ($user, $teamDrive) {
                     echo 'Error while updating Permission for User ' . $user->mail . ' on TeamDrive ' . $teamDrive->getName() . "\n";

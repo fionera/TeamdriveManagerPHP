@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TeamdriveManager\Command\Teamdrive;
+namespace TeamdriveManager\Command\Drive;
 
 
 use Google_Service_Drive_TeamDrive;
@@ -22,19 +22,14 @@ class DownloadFileCommand extends Command
      */
     private $googleDriveService;
     /**
-     * @var TeamDriveService
-     */
-    private $teamDriveService;
-    /**
      * @var array
      */
     private $config;
 
-    public function __construct(GoogleDriveService $googleDriveService, TeamDriveService $teamDriveService, array $config)
+    public function __construct(GoogleDriveService $googleDriveServiceService, array $config)
     {
         parent::__construct();
-        $this->googleDriveService = $googleDriveService;
-        $this->teamDriveService = $teamDriveService;
+        $this->googleDriveService = $googleDriveServiceService;
         $this->config = $config;
     }
 

@@ -25,6 +25,12 @@ $containerBuilder
     ->register(Google_Service_Drive::class, Google_Service_Drive::class)
     ->addArgument(new Reference(Google_Client::class));
 
+$containerBuilder
+    ->register(Google_Service_Directory::class, Google_Service_Directory::class)
+    ->addArgument(new Reference(Google_Client::class));
+
+
+
 $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__ . DIRECTORY_SEPARATOR . 'config'));
 $loader->load('services.yaml');
 
@@ -35,7 +41,7 @@ $containerBuilder->compile();
 $client = new Google_Client();
 $client->useApplicationDefaultCredentials();
 $client->setSubject($config['subject']);
-$client->setScopes([Google_Service_Drive::DRIVE]);
+$client->setScopes([Google_Service_Drive::DRIVE, Google_Service_Directory::ADMIN_DIRECTORY_GROUP]);
 $client->setDefer(true);
 $containerBuilder->set(Google_Client::class, $client);
 

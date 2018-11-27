@@ -2,15 +2,11 @@
 
 namespace TeamdriveManager\Service;
 
-use Exception;
+use Google_Service_Directory;
+use Google_Service_Directory_Group;
+use Google_Service_Directory_Member;
 use Google_Service_Drive;
-use Google_Service_Drive_DriveFile;
-use Google_Service_Drive_Permission;
-use Google_Service_Drive_PermissionList;
-use Google_Service_Drive_TeamDrive;
-use Google_Service_Drive_TeamDriveList;
 use React\Promise\PromiseInterface;
-use TeamdriveManager\Struct\User;
 
 class GoogleGroupService
 {
@@ -18,7 +14,7 @@ class GoogleGroupService
     /**
      * @var Google_Service_Drive
      */
-    private $driveService;
+    private $directoryService;
     /**
      * @var RequestQueue
      */
@@ -26,185 +22,83 @@ class GoogleGroupService
 
     /**
      * GoogleRequestQueue constructor.
-     * @param Google_Service_Drive $drive_service
+     * @param Google_Service_Directory $directoryService
      * @param RequestQueue $requestQueue
      */
-    public function __construct(Google_Service_Drive $drive_service, RequestQueue $requestQueue)
+    public function __construct(Google_Service_Directory $directoryService, RequestQueue $requestQueue)
     {
-        $this->driveService = $drive_service;
+        $this->directoryService = $directoryService;
         $this->requestQueue = $requestQueue;
     }
 
-    public function updatePermission(User $user, Google_Service_Drive_TeamDrive $teamDrive, Google_Service_Drive_Permission $permission): PromiseInterface
+    public function getGroupByEmail(string $email): PromiseInterface
     {
-        echo 'Updating ' . $user->mail . ' for Teamdrive ' . $teamDrive->getName() . "\n";
-
-        $newPermission = new Google_Service_Drive_Permission();
-        $newPermission->setRole($user->role);
+        echo 'Retrieving Group for Address ' . $email . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->update($teamDrive->getId(), $permission->getId(),
-            $newPermission, [
-                'supportsTeamDrives' => true,
-            ]);
+        $request = $this->directoryService->groups->get($email);
 
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function createPermission(User $user, Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
+    public function createGroup(string $name, string $email, string $description = 'Created by TeamdriveManager'): PromiseInterface
     {
-        echo 'Creating ' . $user->mail . ' for Teamdrive ' . $teamDrive->getName() . "\n";
+        echo 'Creating Group ' . $name . ' with Address ' . $email . "\n";
+
+        $group = new Google_Service_Directory_Group();
+        $group->setName($name);
+        $group->setEmail($email);
+        $group->setDescription($description);
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->create($teamDrive->getId(),
-            new Google_Service_Drive_Permission([
-                'type' => 'user',
-                'role' => $user->role,
-                'emailAddress' => $user->mail
-            ]), [
-                'supportsTeamDrives' => true,
-                'sendNotificationEmail' => false,
-            ]);
+        $request = $this->directoryService->groups->insert($group);
 
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function deletePermission(Google_Service_Drive_TeamDrive $teamDrive, Google_Service_Drive_Permission $permission): PromiseInterface
+    public function addMailToGroup(Google_Service_Directory_Group $group, string $mail): PromiseInterface
     {
-        echo 'Deleting ' . $permission->getEmailAddress() . ' for Teamdrive ' . $teamDrive->getName() . "\n";
+        echo 'Adding User ' . $mail . ' to Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
+
+        $member = new Google_Service_Directory_Member();
+        $member->setEmail($mail);
+        $member->setRole('MEMBER');
+        $member->setDeliverySettings('NONE');
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->delete($teamDrive->getId(), $permission->getId(), [
-            'supportsTeamDrives' => true,
-        ]);
-
-        return $this->requestQueue->queueRequest($request);
-
-    }
-
-    public function getPermission(Google_Service_Drive_TeamDrive $teamDrive, string $id): PromiseInterface
-    {
-        echo 'Getting Permission ' . $id . ' for Teamdrive ' . $teamDrive->getName() . "\n";
-
-        /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->get($teamDrive->getId(), $id, [
-            'supportsTeamDrives' => true,
-            'fields' => 'kind,id,emailAddress,domain,role,allowFileDiscovery,displayName,photoLink,expirationTime,teamDrivePermissionDetails,deleted'
-        ]);
+        $request = $this->directoryService->members->insert($group->getId(), $member);
 
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function getPermissionList(Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
+    public function removeMemberFromGroup(Google_Service_Directory_Group $group, Google_Service_Directory_Member $member): PromiseInterface
     {
-        echo 'Getting PermissionList for ' . $teamDrive->getName() . "\n";
+        echo 'Removing User ' . $member->getEmail() . ' from Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->listPermissions($teamDrive->getId(), [
-            'supportsTeamDrives' => true,
-        ]);
+        $request = $this->directoryService->members->delete($group->getId(), $member->getId());
 
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function getPermissionArray(Google_Service_Drive_TeamDrive $teamDrive): PromiseInterface
+    public function getMemberForGroupByMail(Google_Service_Directory_Group $group, string $mail): PromiseInterface
     {
-        echo 'Getting Permissions for ' . $teamDrive->getName() . "\n";
-
-        return $this->getPermissionList($teamDrive)->then(function (Google_Service_Drive_PermissionList $permissionList) use ($teamDrive) {
-            $permissionRequestPromises = [];
-
-            /** @var Google_Service_Drive_Permission $permission */
-            foreach ($permissionList as $permission) {
-                $permissionRequestPromises[] = $this->getPermission($teamDrive, $permission->getId());
-            }
-
-            return \GuzzleHttp\Promise\all($permissionRequestPromises);
-        });
-    }
-
-    public function getTeamDriveList(callable $filter, int $pageSize = 100): PromiseInterface
-    {
-        echo 'Getting TeamDrive List' . "\n";
+        echo 'Retrieving Users for Mail ' . $mail . ' for Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->teamdrives->listTeamdrives([
-            'pageSize' => $pageSize
-        ]);
-
-        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) use ($filter) {
-            $filteredDriveList = [];
-            foreach ($teamDriveList as $teamDrive) {
-                if ($filter($teamDrive) === true) {
-                    $filteredDriveList[] = $teamDrive;
-                }
-            }
-
-            return $filteredDriveList;
-        });
-    }
-
-    public function createTeamDrive(string $teamDriveName): PromiseInterface
-    {
-        echo 'Creating Teamdrive ' . $teamDriveName . "\n";
-
-        $teamDrive = new Google_Service_Drive_TeamDrive();
-        $teamDrive->setName($teamDriveName);
-        try {
-            $requestId = random_int(1, 10000000);
-        } catch (Exception $e) {
-            echo 'Cant get random int for id';
-            die();
-        }
-
-        /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->teamdrives->create($requestId, $teamDrive);
+        $request = $this->directoryService->members->get($group->getId(), $mail);
 
         return $this->requestQueue->queueRequest($request);
     }
 
-
-    public function getFileInformation(string $fileID): PromiseInterface
+    public function getMembersForGroup(Google_Service_Directory_Group $group): PromiseInterface
     {
+        echo 'Retrieving Users for Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
+
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->get($fileID, [
-            'supportsTeamDrives' => true
-        ]);
+        $request = $this->directoryService->members->listMembers($group->getId());
 
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function downloadFile(string $fileID): PromiseInterface
-    {
-        /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->get($fileID, [
-            'supportsTeamDrives' => true,
-            'alt' => 'media',
-        ]);
-
-        return $this->requestQueue->queueStreamRequest($request);
-    }
-
-    public function createFileCopy(string $fileID): PromiseInterface
-    {
-        /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->copy($fileID,
-            new Google_Service_Drive_DriveFile(),
-            [
-                'supportsTeamDrives' => true,
-            ]);
-
-        return $this->requestQueue->queueRequest($request);
-    }
-
-    public function deleteFile(string $fileID): PromiseInterface
-    {
-        /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->delete($fileID,
-            [
-                'supportsTeamDrives' => true,
-            ]);
-
-        return $this->requestQueue->queueRequest($request);
-    }
 }

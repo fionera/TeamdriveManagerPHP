@@ -30,7 +30,7 @@ class RequestQueue
         $this->client = $client;
 
         $this->queue = new Queue(10, null, function (RequestInterface $request, bool $streamRequest = false) {
-            return new \React\Promise\Promise(function (callable $resolve) use ($request, $streamRequest) {
+            return new \React\Promise\Promise(function (callable $resolve, callable $canceller) use ($request, $streamRequest) {
 
                 if ($streamRequest) {
                     $originalClient = $this->client->getHttpClient();
@@ -42,14 +42,19 @@ class RequestQueue
                     $this->client->setHttpClient($guzzleClient);
                 }
 
-                $response = $this->client->execute($request);
+                try {
+                    $response = $this->client->execute($request);
+                } catch (Exception $exception) {
+                    $canceller($exception);
+                    return;
+                }
 
                 if ($streamRequest) {
                     $this->client->setHttpClient($originalClient);
                 }
 
                 if ($response instanceof Exception) {
-                    var_dump($response);
+                    $canceller($response);
                 }
 
                 $resolve($response);
