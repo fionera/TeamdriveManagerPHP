@@ -11,5 +11,9 @@ return [
             'bar@foo.com'
         ]
     ],
-    'teamdriveNameBegin' => ''
+    'teamdriveNameBegin' => '',
+    'iam' => [
+        'enabled' => false,
+        'projectId' => ''
+    ]
 ];
