@@ -3,6 +3,7 @@
 return [
     'serviceAccountFile' => './file.json',
     'subject' => 'foo@bar.com',
+    'domain' => 'bar.com',
     'users' => [
         'foo@bar.com' => 'organizer',
     ],

@@ -4,11 +4,14 @@
 namespace TeamdriveManager\Command\Assign;
 
 
+use Exception;
 use Google_Service_Directory_Group;
 use Google_Service_Directory_Member;
 use Google_Service_Directory_Members;
 use Google_Service_Drive_Permission;
 use Google_Service_Drive_TeamDrive;
+use Google_Service_Iam_ListServiceAccountsResponse;
+use Google_Service_Iam_ServiceAccount;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Command\Command;
@@ -16,6 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TeamdriveManager\Service\GoogleDriveService;
 use TeamdriveManager\Service\GoogleGroupService;
+use TeamdriveManager\Service\GoogleIamService;
 use TeamdriveManager\Struct\User;
 
 class AssignWithGroupCommand extends Command
@@ -33,6 +37,11 @@ class AssignWithGroupCommand extends Command
     private $googleDriveService;
 
     /**
+     * @var GoogleIamService
+     */
+    private $googleIamService;
+
+    /**
      * @var array
      */
     private $config;
@@ -46,13 +55,16 @@ class AssignWithGroupCommand extends Command
 
     private $memberCache = [];
 
-    public function __construct(GoogleGroupService $googleGroupService, GoogleDriveService $googleDriveService, array $config, array $users)
+    private $serviceAccountCache = [];
+
+    public function __construct(GoogleGroupService $googleGroupService, GoogleDriveService $googleDriveService, GoogleIamService $googleIamService, array $config, array $users)
     {
         parent::__construct();
         $this->googleGroupService = $googleGroupService;
         $this->googleDriveService = $googleDriveService;
         $this->config = $config;
         $this->users = $users;
+        $this->googleIamService = $googleIamService;
     }
 
     public function run(InputInterface $input, OutputInterface $output)
@@ -122,7 +134,7 @@ class AssignWithGroupCommand extends Command
             $this->googleDriveService->createPermissionForGroup($group, $groupRole, $teamDrive)->then(function () use ($group, $teamDrive) {
                 echo 'Created Permission for Group ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             }, function () use ($group, $teamDrive) {
-                echo 'Error while creating Permission for User ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
+                echo 'Error while creating Permission for Group ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             });
 
             return;
@@ -131,9 +143,9 @@ class AssignWithGroupCommand extends Command
         if ($permission !== null && $group !== null) {
             if ($permission->getRole() !== $groupRole) {
                 $this->googleDriveService->updatePermissionForGroup($group, $groupRole, $teamDrive, $permission)->then(function () use ($group, $teamDrive) {
-                    echo 'Updated Permission for User ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
+                    echo 'Updated Permission for Group ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
                 }, function () use ($group, $teamDrive) {
-                    echo 'Error while updating Permission for User ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
+                    echo 'Error while updating Permission for Group ' . $group->getEmail() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
                 });
             }
 
@@ -142,9 +154,9 @@ class AssignWithGroupCommand extends Command
 
         if ($permission !== null) {
             $this->googleDriveService->deletePermission($teamDrive, $permission)->then(function () use ($teamDrive, $permission) {
-                echo 'Deleted Permission for User ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
+                echo 'Deleted Permission for Group ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             }, function () use ($permission, $teamDrive) {
-                echo 'Error while deleting Permission for User ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
+                echo 'Error while deleting Permission for Group ' . $permission->getEmailAddress() . ' on TeamDrive ' . $teamDrive->getName() . "\n";
             });
         }
     }
@@ -177,6 +189,18 @@ class AssignWithGroupCommand extends Command
                 $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($group) {
                     $this->memberCache[$group->getId()] = $members;
                 });
+            });
+        }
+
+        if ($this->config['iam']['enabled'] !== true) {
+            $this->googleIamService->getServiceAccounts($this->config['iam']['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) {
+                /** @var Google_Service_Iam_ServiceAccount $account */
+                foreach ($serviceAccounts->getAccounts() as $account) {
+                    $this->serviceAccountCache[] = $account;
+                }
+            }, function (Exception $exception) {
+                var_dump($exception->getMessage());
+                echo "An Error Occurred\n";
             });
         }
 
@@ -299,6 +323,6 @@ class AssignWithGroupCommand extends Command
 
     private function getGroupAddressForTeamdrive(Google_Service_Drive_TeamDrive $teamDrive, string $role)
     {
-        return hash('sha256', $teamDrive->getId() . '_' . $role) . '@fionera.de';
+        return hash('sha256', $teamDrive->getId() . '_' . $role) . '@' . $this->config['domain'];
     }
 }
