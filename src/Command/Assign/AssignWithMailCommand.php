@@ -3,13 +3,16 @@
 
 namespace TeamdriveManager\Command\Assign;
 
-
+use Exception;
 use Google_Service_Drive_Permission;
 use Google_Service_Drive_TeamDrive;
+use Google_Service_Iam_ListServiceAccountsResponse;
+use Google_Service_Iam_ServiceAccount;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TeamdriveManager\Service\GoogleDriveService;
+use TeamdriveManager\Service\GoogleIamService;
 use TeamdriveManager\Struct\User;
 
 class AssignWithMailCommand extends Command
@@ -60,7 +63,6 @@ class AssignWithMailCommand extends Command
             foreach ($this->getUsersWithoutPermission($permissions, $teamDrive->getName()) as $user) {
                 $this->checkPermissionForUserAndTeamDrive($user, $teamDrive, null);
             }
-
         }, function () {
             echo "An Error Occurred\n";
         });

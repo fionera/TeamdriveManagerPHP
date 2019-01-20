@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Iam;
 
-
 use Exception;
 use Google_Service_Iam_ListServiceAccountsResponse;
 use Google_Service_Iam_Resource_ProjectsServiceAccounts;
@@ -49,7 +48,6 @@ class ListServiceAccountsCommand extends Command
             foreach ($serviceAccounts->getAccounts() as $account) {
                 $output->writeln($account->getDisplayName());
             }
-
         }, function (Exception $exception) {
             var_dump($exception->getMessage());
             echo "An Error Occurred\n";

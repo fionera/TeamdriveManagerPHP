@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Drive;
 
-
 use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -128,6 +127,5 @@ class DownloadFileCommand extends Command
 //        }, function ($e) {
 //            var_dump($e);
 //        });
-
     }
 }

@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Group;
 
-
 use Google_Service_Directory_Group;
 use Google_Service_Directory_Members;
 use Symfony\Component\Console\Command\Command;
@@ -43,8 +42,6 @@ class ListGroupMembers extends Command
                     $output->writeln($member->getEmail());
                 }
             });
-
         });
-
     }
 }

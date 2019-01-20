@@ -43,7 +43,6 @@ class GoogleIamService
 
     public function createServiceAccount(string $projectId, string $name): PromiseInterface
     {
-
         $serviceAccount = new Google_Service_Iam_ServiceAccount();
         $serviceAccount->setDisplayName($name);
 
@@ -59,7 +58,6 @@ class GoogleIamService
 
     public function createServiceAccountKey(Google_Service_Iam_ServiceAccount $serviceAccount): PromiseInterface
     {
-
         $serviceAccountKeyRequest = new \Google_Service_Iam_CreateServiceAccountKeyRequest();
 
         /** @var \GuzzleHttp\Psr7\Request $request */
@@ -67,5 +65,4 @@ class GoogleIamService
 
         return $this->requestQueue->queueRequest($request);
     }
-
 }

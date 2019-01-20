@@ -100,5 +100,4 @@ class GoogleGroupService
 
         return $this->requestQueue->queueRequest($request);
     }
-
 }

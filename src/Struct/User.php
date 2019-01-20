@@ -20,7 +20,6 @@ class User
         /** @var User[] $users */
         $users = [];
         foreach ($config['users'] as $mail => $role) {
-
             $blackList = [];
             foreach ($config['blacklist'] as $driveName => $mailList) {
                 if (in_array($mail, $mailList, true)) {

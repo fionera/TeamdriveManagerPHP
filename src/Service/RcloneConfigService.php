@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Service;
 
-
 use Google_Service_Drive_TeamDrive;
 
 class RcloneConfigService

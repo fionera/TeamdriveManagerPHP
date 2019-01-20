@@ -44,10 +44,14 @@ class GoogleDriveService
         $newPermission->setRole($user->role);
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->update($teamDrive->getId(), $permission->getId(),
-            $newPermission, [
+        $request = $this->driveService->permissions->update(
+            $teamDrive->getId(),
+            $permission->getId(),
+            $newPermission,
+            [
                 'supportsTeamDrives' => true,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }
@@ -60,10 +64,14 @@ class GoogleDriveService
         $newPermission->setRole($role);
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->update($teamDrive->getId(), $permission->getId(),
-            $newPermission, [
+        $request = $this->driveService->permissions->update(
+            $teamDrive->getId(),
+            $permission->getId(),
+            $newPermission,
+            [
                 'supportsTeamDrives' => true,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }
@@ -73,15 +81,18 @@ class GoogleDriveService
         echo 'Creating ' . $user->mail . ' for Teamdrive ' . $teamDrive->getName() . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->create($teamDrive->getId(),
+        $request = $this->driveService->permissions->create(
+            $teamDrive->getId(),
             new Google_Service_Drive_Permission([
                 'type' => 'user',
                 'role' => $user->role,
                 'emailAddress' => $user->mail
-            ]), [
+            ]),
+            [
                 'supportsTeamDrives' => true,
                 'sendNotificationEmail' => false,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }
@@ -91,15 +102,18 @@ class GoogleDriveService
         echo 'Creating ' . $group->getEmail() . ' for Teamdrive ' . $teamDrive->getName() . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->create($teamDrive->getId(),
+        $request = $this->driveService->permissions->create(
+            $teamDrive->getId(),
             new Google_Service_Drive_Permission([
                 'type' => 'group',
                 'role' => $role,
                 'emailAddress' => $group->getEmail()
-            ]), [
+            ]),
+            [
                 'supportsTeamDrives' => true,
                 'sendNotificationEmail' => false,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }
@@ -114,7 +128,6 @@ class GoogleDriveService
         ]);
 
         return $this->requestQueue->queueRequest($request);
-
     }
 
     public function getPermission(Google_Service_Drive_TeamDrive $teamDrive, string $id): PromiseInterface
@@ -223,11 +236,13 @@ class GoogleDriveService
     public function createFileCopy(string $fileID): PromiseInterface
     {
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->copy($fileID,
+        $request = $this->driveService->files->copy(
+            $fileID,
             new Google_Service_Drive_DriveFile(),
             [
                 'supportsTeamDrives' => true,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }
@@ -235,10 +250,12 @@ class GoogleDriveService
     public function deleteFile(string $fileID): PromiseInterface
     {
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->files->delete($fileID,
+        $request = $this->driveService->files->delete(
+            $fileID,
             [
                 'supportsTeamDrives' => true,
-            ]);
+            ]
+        );
 
         return $this->requestQueue->queueRequest($request);
     }

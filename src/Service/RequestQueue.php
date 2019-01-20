@@ -31,7 +31,6 @@ class RequestQueue
 
         $this->queue = new Queue(10, null, function (RequestInterface $request, bool $streamRequest = false) {
             return new \React\Promise\Promise(function (callable $resolve, callable $canceller) use ($request, $streamRequest) {
-
                 if ($streamRequest) {
                     $originalClient = $this->client->getHttpClient();
 

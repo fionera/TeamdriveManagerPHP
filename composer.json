@@ -13,5 +13,8 @@
     "psr-4": {
       "TeamdriveManager\\": "src/"
     }
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.14"
   }
 }

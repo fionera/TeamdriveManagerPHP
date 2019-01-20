@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Assign;
 
-
 use Exception;
 use Google_Service_Directory_Group;
 use Google_Service_Directory_Member;
@@ -20,6 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TeamdriveManager\Service\GoogleDriveService;
 use TeamdriveManager\Service\GoogleGroupService;
 use TeamdriveManager\Service\GoogleIamService;
+use TeamdriveManager\Struct\ServiceAccountGroup;
 use TeamdriveManager\Struct\User;
 
 class AssignWithGroupCommand extends Command
@@ -51,11 +51,13 @@ class AssignWithGroupCommand extends Command
      */
     private $users;
 
+    private $globalGroups = [];
+
     private $groupCache = [];
 
     private $memberCache = [];
 
-    private $serviceAccountCache = [];
+    private static $iamGroupMail;
 
     public function __construct(GoogleGroupService $googleGroupService, GoogleDriveService $googleDriveService, GoogleIamService $googleIamService, array $config, array $users)
     {
@@ -63,15 +65,61 @@ class AssignWithGroupCommand extends Command
         $this->googleGroupService = $googleGroupService;
         $this->googleDriveService = $googleDriveService;
         $this->config = $config;
-        $this->users = $users;
         $this->googleIamService = $googleIamService;
+
+        $iamConfig = $config['iam'];
+        if ($iamConfig['enabled'] === true) {
+            self::$iamGroupMail = $this->getGroupAddress('serviceaccountsgroup');
+
+            $iamGroupPromise = new Promise(function (callable $resolver, callable $canceler) {
+                $this->googleGroupService->getGroupByEmail(self::$iamGroupMail)->then(function (Google_Service_Directory_Group $group) use ($resolver) {
+                    $resolver($group);
+                }, function (\Exception $exception) use ($resolver) {
+                    if ($exception->getCode() === 404) {
+                        $this->googleGroupService->createGroup(
+                            'Service Account Group',
+                            self::$iamGroupMail
+                        )->then(function (Google_Service_Directory_Group $group) use ($resolver) {
+                            $resolver($group);
+                        });
+                    }
+                });
+            });
+
+            $iamGroupPromise->then(function (Google_Service_Directory_Group $group) use ($googleIamService, $iamConfig, $googleGroupService, &$users) {
+                $googleIamService->getServiceAccounts($iamConfig['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($googleGroupService, $group) {
+                    $googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($serviceAccounts, $googleGroupService, $group) {
+                        $mails = [];
+                        /** @var Google_Service_Directory_Member $member */
+                        foreach ($members as $member) {
+                            $mails[] = $member->getEmail();
+                        }
+
+                        /** @var Google_Service_Iam_ServiceAccount $account */
+                        foreach ($serviceAccounts->getAccounts() as $account) {
+                            if (!in_array($account->getEmail(), $mails, true)) {
+                                $googleGroupService->addMailToGroup($group, $account->getEmail());
+                            }
+                        }
+                    });
+                }, function (Exception $exception) {
+                    var_dump($exception->getMessage());
+                    echo "An Error Occurred\n";
+                });
+
+                $this->globalGroups[] = $group;
+            });
+        }
+
+        $this->users = $users;
     }
 
     public function run(InputInterface $input, OutputInterface $output)
     {
+        // Request all Teamdrives and filter them
         $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
-        })->then(function (array $teamDriveArray) {
+        })->then(function (array $teamDriveArray) { // Check the Permissions for every Teamdrive with group and user check
             array_map([$this, 'checkPermissionsForTeamdrive'], $teamDriveArray);
         });
 
@@ -91,8 +139,17 @@ class AssignWithGroupCommand extends Command
                 $this->checkPermissionForGroup($group, $teamDrive, null);
             }
 
+            foreach ($this->globalGroups as $group) {
+                $this->checkPermissionForGroup($group, $teamDrive, null, 'organizer');
+            }
+
+
             /** @var $permissions Google_Service_Drive_Permission[] */
             foreach ($permissions as $permission) {
+                if ($permission->getEmailAddress() === self::$iamGroupMail) {
+                    continue;
+                }
+
                 $group = $this->getGroupByEmail($permission->getEmailAddress());
                 $this->checkPermissionForGroup($group, $teamDrive, $permission);
             }
@@ -123,10 +180,9 @@ class AssignWithGroupCommand extends Command
         return $groupsWithoutPermission;
     }
 
-    private function checkPermissionForGroup(?Google_Service_Directory_Group $group, Google_Service_Drive_TeamDrive $teamDrive, ?Google_Service_Drive_Permission $permission): void
+    private function checkPermissionForGroup(?Google_Service_Directory_Group $group, Google_Service_Drive_TeamDrive $teamDrive, ?Google_Service_Drive_Permission $permission, string $groupRole = null): void
     {
-        $groupRole = null;
-        if ($group !== null){
+        if ($group !== null && $groupRole === null) {
             $groupRole = $this->getRoleForGroup($group);
         }
 
@@ -161,7 +217,8 @@ class AssignWithGroupCommand extends Command
         }
     }
 
-    private function getRoleForGroup(Google_Service_Directory_Group $givenGroup) {
+    private function getRoleForGroup(Google_Service_Directory_Group $givenGroup)
+    {
         foreach ($this->groupCache as $teamdriveId => $groups) {
             /**
              * @var string $role
@@ -180,41 +237,38 @@ class AssignWithGroupCommand extends Command
 
     private function checkPermissionsForTeamdrive(Google_Service_Drive_TeamDrive $teamDrive): void
     {
+        // Get all roles
         $roles = array_unique(array_map(function (User $user) {
             return $user->role;
         }, $this->users));
 
+        // For every role
         foreach ($roles as $role) {
+            // Load Group for the current Teamdrive and the role
             $this->loadGroupForTeamdriveAndRole($teamDrive, $role)->then(function (Google_Service_Directory_Group $group) {
+                // Get Members for the group
                 $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($group) {
                     $this->memberCache[$group->getId()] = $members;
                 });
             });
         }
 
-        if ($this->config['iam']['enabled'] !== true) {
-            $this->googleIamService->getServiceAccounts($this->config['iam']['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) {
-                /** @var Google_Service_Iam_ServiceAccount $account */
-                foreach ($serviceAccounts->getAccounts() as $account) {
-                    $this->serviceAccountCache[] = $account;
-                }
-            }, function (Exception $exception) {
-                var_dump($exception->getMessage());
-                echo "An Error Occurred\n";
-            });
-        }
-
         /**
+         * for every role and group for this teamdrive
          * @var string $role
          * @var Google_Service_Directory_Group $group
          */
         foreach ($this->groupCache[$teamDrive->getName()] as $role => $group) {
+            // Go over every User
             foreach ($this->users as $user) {
+                // and check the Permission for him
                 $this->checkPermissionForTeamdriveUser($teamDrive, $group, $role, $user);
             }
 
             /** @var Google_Service_Directory_Member $member */
+            // For every member in group
             foreach ($this->getMembersForGroup($group) as $member) {
+                // if not in the allowed list, remove
                 if (!\in_array(strtolower($member->getEmail()), $this->getUserEmails($this->getUsersForTeamdrive($teamDrive)), true)) {
                     $this->googleGroupService->removeMemberFromGroup($group, $member);
                 }
@@ -241,7 +295,8 @@ class AssignWithGroupCommand extends Command
         }, $users ?? $this->users);
     }
 
-    private function getGroupByEmail(string $email){
+    private function getGroupByEmail(string $email)
+    {
         foreach ($this->groupCache as $teamdriveId => $groups) {
             /**
              * @var string $role
@@ -295,7 +350,6 @@ class AssignWithGroupCommand extends Command
                 $this->groupCache[$teamDrive->getName()][$role] = $group;
 
                 $resolver($group);
-
             }, function (\Exception $exception) use ($teamDrive, $role, $resolver) {
                 if ($exception->getCode() === 404) {
                     $this->googleGroupService->createGroup(
@@ -323,6 +377,11 @@ class AssignWithGroupCommand extends Command
 
     private function getGroupAddressForTeamdrive(Google_Service_Drive_TeamDrive $teamDrive, string $role)
     {
-        return hash('sha256', $teamDrive->getId() . '_' . $role) . '@' . $this->config['domain'];
+        return $this->getGroupAddress(hash('sha256', $teamDrive->getId() . '_' . $role));
+    }
+
+    private function getGroupAddress(string $address)
+    {
+        return $address . '@' . $this->config['domain'];
     }
 }

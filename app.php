@@ -6,6 +6,7 @@ use Symfony\Component\Console\DependencyInjection\AddConsoleCommandPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use TeamdriveManager\Service\GoogleIamService;
 use TeamdriveManager\Struct\User;
 
 require_once 'vendor/autoload.php';
@@ -18,6 +19,7 @@ $containerBuilder->setParameter('config', $config);
 
 $users = User::fromConfig($config);
 $containerBuilder->setParameter('users', $users);
+unset($users);
 
 $containerBuilder->register(Google_Client::class)->setSynthetic(true);
 
@@ -50,6 +52,7 @@ $client->setDefer(true);
 $containerBuilder->set(Google_Client::class, $client);
 
 $container = $containerBuilder;
+unset($containerBuilder);
 
 $loop = React\EventLoop\Factory::create();
 

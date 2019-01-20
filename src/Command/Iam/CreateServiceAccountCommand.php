@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Iam;
 
-
 use Exception;
 use Google_Service_Iam_ServiceAccount;
 use Google_Service_Iam_ServiceAccountKey;
@@ -38,7 +37,8 @@ class CreateServiceAccountCommand extends Command
     {
         $this
             ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Service Account')
-            ->addOption('fileName', '-f', InputOption::VALUE_REQUIRED, 'The filename for the Key');
+            ->addOption('fileName', '-f', InputOption::VALUE_REQUIRED, 'The filename for the Key')
+            ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1);
     }
 
 
@@ -53,32 +53,37 @@ class CreateServiceAccountCommand extends Command
             return;
         }
 
-        $name = $input->getOption('name');
-        if ($name === null) {
-            $name = $io->ask('Serviceaccount Name');
+        $inputName = $input->getOption('name');
+        if ($inputName === null) {
+            $inputName = $io->ask('Serviceaccount Name');
         }
 
-        $this->iamService->createServiceAccount($iam['projectId'], $name)->then(function (Google_Service_Iam_ServiceAccount $serviceAccount) use ($output, $input) {
-            $output->writeln('Successfully created, creating Key');
+        $amount = $input->getOption('amount');
 
-            $this->iamService->createServiceAccountKey($serviceAccount)->then(function (Google_Service_Iam_ServiceAccountKey $serviceAccountKey) use ($output, $input, $serviceAccount) {
+        for ($i = 1; $i < $amount + 1; $i++) {
+            $name = str_replace('INDEX', $i, $inputName);
 
-                $fileName = $input->getOption('fileName');
-                if ($fileName === null) {
-                    $fileName = $serviceAccount->getProjectId() . '-' . strtolower(str_replace(' ', '-', $serviceAccount->displayName) . '.json');
-                }
+            $this->iamService->createServiceAccount($iam['projectId'], $name)->then(function (Google_Service_Iam_ServiceAccount $serviceAccount) use ($output, $input, $i) {
+                $output->writeln('Successfully created, creating Key');
 
-                file_put_contents($fileName, base64_decode($serviceAccountKey->getPrivateKeyData()));
+                $this->iamService->createServiceAccountKey($serviceAccount)->then(function (Google_Service_Iam_ServiceAccountKey $serviceAccountKey) use ($output, $input, $serviceAccount, $i) {
+                    $fileName = $input->getOption('fileName');
 
-                $output->writeln('Successfully created, saved to ' . $fileName);
+                    if ($fileName === null) {
+                        $fileName = $serviceAccount->getProjectId() . '-' . strtolower(str_replace(' ', '-', $serviceAccount->displayName)) . '.json';
+                    }
 
+                    file_put_contents($fileName, base64_decode($serviceAccountKey->getPrivateKeyData()));
+
+                    $output->writeln('Successfully created, saved to ' . $fileName);
+                }, function (Exception $exception) {
+                    var_dump($exception->getMessage());
+                    echo "An Error Occurred\n";
+                });
             }, function (Exception $exception) {
                 var_dump($exception->getMessage());
                 echo "An Error Occurred\n";
             });
-        }, function (Exception $exception) {
-            var_dump($exception->getMessage());
-            echo "An Error Occurred\n";
-        });
+        }
     }
 }

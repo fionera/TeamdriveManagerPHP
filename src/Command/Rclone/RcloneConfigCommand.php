@@ -3,7 +3,6 @@
 
 namespace TeamdriveManager\Command\Rclone;
 
-
 use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
