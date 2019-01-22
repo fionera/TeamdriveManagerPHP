@@ -73,7 +73,7 @@ class CreateServiceAccountCommand extends Command
                         $fileName = $serviceAccount->getProjectId() . '-' . strtolower(str_replace(' ', '-', $serviceAccount->displayName)) . '.json';
                     }
 
-                    file_put_contents($fileName, base64_decode($serviceAccountKey->getPrivateKeyData()));
+                    file_put_contents('Files/' . $fileName, base64_decode($serviceAccountKey->getPrivateKeyData()));
 
                     $output->writeln('Successfully created, saved to ' . $fileName);
                 }, function (Exception $exception) {

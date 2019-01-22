@@ -19,7 +19,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TeamdriveManager\Service\GoogleDriveService;
 use TeamdriveManager\Service\GoogleGroupService;
 use TeamdriveManager\Service\GoogleIamService;
-use TeamdriveManager\Struct\ServiceAccountGroup;
 use TeamdriveManager\Struct\User;
 
 class AssignWithGroupCommand extends Command
@@ -139,20 +138,46 @@ class AssignWithGroupCommand extends Command
                 $this->checkPermissionForGroup($group, $teamDrive, null);
             }
 
-            foreach ($this->globalGroups as $group) {
-                $this->checkPermissionForGroup($group, $teamDrive, null, 'organizer');
-            }
-
-
+            $permissionMails = [];
             /** @var $permissions Google_Service_Drive_Permission[] */
             foreach ($permissions as $permission) {
-                if ($permission->getEmailAddress() === self::$iamGroupMail) {
+                $permissionMails[strtolower($permission->getEmailAddress())] = $permission;
+            }
+
+            $globalGroupMails = [];
+            foreach ($this->globalGroups as $group) {
+                $globalGroupMails[strtolower($group->getEmail())] = $group;
+            }
+
+            foreach ($permissionMails as $permissionMail => $permission) {
+                if (array_key_exists($permissionMail, $globalGroupMails)) {
+                    $this->checkPermissionForGroup($globalGroupMails[$permissionMail], $teamDrive, $permission, 'organizer');
+                    unset($globalGroupMails[$permissionMail]);
                     continue;
                 }
 
                 $group = $this->getGroupByEmail($permission->getEmailAddress());
                 $this->checkPermissionForGroup($group, $teamDrive, $permission);
+                unset($permissionMails[$permissionMail]);
             }
+
+            foreach ($globalGroupMails as $groupMail => $group) {
+                $this->checkPermissionForGroup($group, $teamDrive, null, 'organizer');
+            }
+
+//            /** @var $permissions Google_Service_Drive_Permission[] */
+//            foreach ($permissions as $permission) {
+//                /** @var Google_Service_Directory_Group $group */
+//                foreach ($this->globalGroups as $group) {
+//                    if (strtolower($permission->getEmailAddress()) === strtolower($group->getEmail())) {
+//                        $this->checkPermissionForGroup($group, $teamDrive, $permission, 'organizer');
+//                        continue 2;
+//                    }
+//                }
+//
+//                $group = $this->getGroupByEmail($permission->getEmailAddress());
+//                $this->checkPermissionForGroup($group, $teamDrive, $permission);
+//            }
         }, function () {
             echo "An Error Occurred\n";
         });
