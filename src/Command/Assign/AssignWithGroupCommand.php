@@ -311,7 +311,7 @@ class AssignWithGroupCommand extends Command
                     $users[] = $user;
                 }
             } else if (!$this->isUserExcludedFromTeamDrive($user, $teamDrive->getName())) {
-                $user[] = $user;
+                $users[] = $user;
             }
         }
 
