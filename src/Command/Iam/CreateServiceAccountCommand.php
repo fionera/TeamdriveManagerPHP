@@ -73,6 +73,10 @@ class CreateServiceAccountCommand extends Command
                         $fileName = $serviceAccount->getProjectId() . '-' . strtolower(str_replace(' ', '-', $serviceAccount->displayName)) . '.json';
                     }
 
+                    if (!is_dir('Files') && !mkdir('Files') && !is_dir('Files')) {
+                        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'Files'));
+                    }
+
                     file_put_contents('Files/' . $fileName, base64_decode($serviceAccountKey->getPrivateKeyData()));
 
                     $output->writeln('Successfully created, saved to ' . $fileName);
