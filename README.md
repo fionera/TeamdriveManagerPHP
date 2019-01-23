@@ -10,6 +10,8 @@
     - Name it as you want in this tutorial I name it "TeamdriveManager"
     - After its created select it
 - Click on "Enable APIs"
+    - Enable the Admin SDK
+    - Enable the Identity and Access Management (IAM) API
     - Enable the Google Drive API
 - Click on "Credentials"
     - "Create Credentials"
