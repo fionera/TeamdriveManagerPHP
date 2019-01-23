@@ -65,8 +65,12 @@ class AssignWithGroupCommand extends Command
         $this->googleDriveService = $googleDriveService;
         $this->config = $config;
         $this->googleIamService = $googleIamService;
+        $this->users = $users;
+    }
 
-        $iamConfig = $config['iam'];
+    public function run(InputInterface $input, OutputInterface $output)
+    {
+        $iamConfig = $this->config['iam'];
         if ($iamConfig['enabled'] === true) {
             self::$iamGroupMail = $this->getGroupAddress('serviceaccountsgroup');
 
@@ -85,9 +89,9 @@ class AssignWithGroupCommand extends Command
                 });
             });
 
-            $iamGroupPromise->then(function (Google_Service_Directory_Group $group) use ($googleIamService, $iamConfig, $googleGroupService, &$users) {
-                $googleIamService->getServiceAccounts($iamConfig['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($googleGroupService, $group) {
-                    $googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($serviceAccounts, $googleGroupService, $group) {
+            $iamGroupPromise->then(function (Google_Service_Directory_Group $group) use ($iamConfig) {
+                $this->googleIamService->getServiceAccounts($iamConfig['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($group) {
+                    $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($serviceAccounts, $group) {
                         $mails = [];
                         /** @var Google_Service_Directory_Member $member */
                         foreach ($members as $member) {
@@ -97,7 +101,7 @@ class AssignWithGroupCommand extends Command
                         /** @var Google_Service_Iam_ServiceAccount $account */
                         foreach ($serviceAccounts->getAccounts() as $account) {
                             if (!in_array($account->getEmail(), $mails, true)) {
-                                $googleGroupService->addMailToGroup($group, $account->getEmail());
+                                $this->googleGroupService->addMailToGroup($group, $account->getEmail());
                             }
                         }
                     });
@@ -110,11 +114,7 @@ class AssignWithGroupCommand extends Command
             });
         }
 
-        $this->users = $users;
-    }
 
-    public function run(InputInterface $input, OutputInterface $output)
-    {
         // Request all Teamdrives and filter them
         $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
