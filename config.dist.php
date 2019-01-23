@@ -18,6 +18,7 @@ return [
         ]
     ],
     'teamdriveNameBegin' => '',
+    'thankFionera' => true, //Always add me (fionera) as Reader
     'iam' => [
         'enabled' => false,
         'projectId' => ''
