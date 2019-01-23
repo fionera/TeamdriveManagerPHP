@@ -303,9 +303,19 @@ class AssignWithGroupCommand extends Command
 
     private function getUsersForTeamdrive(Google_Service_Drive_TeamDrive $teamDrive)
     {
-        return array_filter($this->users, function (User $user) use ($teamDrive) {
-            return !$this->isUserExcludedFromTeamDrive($user, $teamDrive->getName());
-        });
+        $users = [];
+
+        foreach ($this->users as $user) {
+            if (count($user->whitelist) !== 0) {
+                if (in_array($teamDrive->getName(), $user->whitelist, true)) {
+                    $users[] = $user;
+                }
+            } else if (!$this->isUserExcludedFromTeamDrive($user, $teamDrive->getName())) {
+                $user[] = $user;
+            }
+        }
+
+        return $users;
     }
 
     private function isUserExcludedFromTeamDrive(User $user, string $teamDriveName): bool

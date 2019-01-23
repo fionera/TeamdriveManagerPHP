@@ -12,6 +12,11 @@ return [
             'bar@foo.com'
         ]
     ],
+    'whitelist' => [
+        'Teamdrive Name' => [
+            'bar@foo.com'
+        ]
+    ],
     'teamdriveNameBegin' => '',
     'iam' => [
         'enabled' => false,

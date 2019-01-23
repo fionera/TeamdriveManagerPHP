@@ -7,12 +7,14 @@ class User
     public $mail;
     public $role;
     public $excluded;
+    public $whitelist;
 
-    public function __construct(string $mail, string $role, array $excluded)
+    public function __construct(string $mail, string $role, array $excluded, array $whitelist)
     {
         $this->mail = $mail;
         $this->role = $role;
         $this->excluded = $excluded;
+        $this->whitelist = $whitelist;
     }
 
     public static function fromConfig(array $config): array
@@ -27,7 +29,14 @@ class User
                 }
             }
 
-            $users[] = new User($mail, $role, $blackList);
+            $whiteList = [];
+            foreach ($config['whitelist'] as $driveName => $mailList) {
+                if (in_array($mail, $mailList, true)) {
+                    $whiteList[] = $driveName;
+                }
+            }
+
+            $users[] = new User($mail, $role, $blackList, $whiteList);
         }
 
         return $users;
