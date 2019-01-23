@@ -17,7 +17,7 @@ return [
             'bar@foo.com'
         ]
     ],
-    'teamdriveNameBegin' => '',
+    'teamDriveNameBegin' => '',
     'thankFionera' => true, //Always add me (fionera) as Reader
     'iam' => [
         'enabled' => false,
