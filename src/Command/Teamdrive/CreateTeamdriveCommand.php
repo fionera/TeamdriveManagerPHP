@@ -49,7 +49,7 @@ class CreateTeamdriveCommand extends Command
         }
 
         if ($input->getOption('prefix')) {
-            $name = $this->config['teamdriveNameBegin'] . $name;
+            $name = $this->config['teamDriveNameBegin'] . $name;
         }
 
         $this->googleDriveService->createTeamDrive($name)->then(function () use ($name) {

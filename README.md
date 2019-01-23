@@ -50,6 +50,6 @@
     - change the domain to your google account domain
     - put all users you want with their corresponding role in the users array
     - you can empty the Blacklist as you mostly dont need it
-    - teamdriveNameBegin is the Prefix all your Drives that should be Managed have like "Fionera - "
+    - teamDriveNameBegin is the Prefix all your Drives that should be Managed have like "Fionera - "
     - The IAM Section is for Service Account Stuff and currently not needed
 - Now you can use "php app.php assign:mail" for assigning all Email Addresses with their roles to the Teamdrives that match the prefix 
