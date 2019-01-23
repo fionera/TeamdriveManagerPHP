@@ -18,26 +18,39 @@ class CreateTeamdriveCommand extends Command
      * @var GoogleDriveService
      */
     private $googleDriveService;
+    /**
+     * @var array
+     */
+    private $config;
 
-    public function __construct(GoogleDriveService $googleDriveServiceService)
+    public function __construct(GoogleDriveService $googleDriveServiceService, array $config)
     {
         parent::__construct();
         $this->googleDriveService = $googleDriveServiceService;
+        $this->config = $config;
     }
 
 
     protected function configure()
     {
         $this
-            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
+            ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive')
+            ->addOption('prefix', '-p', InputOption::VALUE_NONE, 'Should the prefix be added');
     }
 
 
-    public function run(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
 
-        $name = $io->ask('Teamdrive Name');
+        $name = $input->getOption('name');
+        if ($name === null) {
+            $name = $io->ask('Teamdrive Name');
+        }
+
+        if ($input->getOption('prefix')) {
+            $name = $this->config['teamdriveNameBegin'] . $name;
+        }
 
         $this->googleDriveService->createTeamDrive($name)->then(function () use ($name) {
         });
