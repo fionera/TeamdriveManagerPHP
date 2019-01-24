@@ -173,7 +173,7 @@ class GoogleDriveService
 
     public function getTeamDriveList(callable $filter, int $pageSize = 100): PromiseInterface
     {
-        echo 'Getting TeamDrive List' . "\n";
+        echo 'Getting Filtered TeamDrive List' . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->teamdrives->listTeamdrives([

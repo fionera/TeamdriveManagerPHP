@@ -1,6 +1,5 @@
 <?php
 
-
 namespace TeamdriveManager\Command\Assign;
 
 use Exception;
@@ -113,7 +112,6 @@ class AssignWithGroupCommand extends Command
                 $this->globalGroups[] = $group;
             });
         }
-
 
         // Request all Teamdrives and filter them
         $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
