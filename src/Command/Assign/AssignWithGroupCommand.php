@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Assign;
 
@@ -183,7 +183,8 @@ class AssignWithGroupCommand extends Command
 
     /**
      * @param Google_Service_Drive_Permission[] $permissions
-     * @param Google_Service_Drive_TeamDrive $teamDrive
+     * @param Google_Service_Drive_TeamDrive    $teamDrive
+     *
      * @return User[]
      */
     private function getGroupsWithoutPermission(array $permissions, Google_Service_Drive_TeamDrive $teamDrive): array
@@ -244,7 +245,7 @@ class AssignWithGroupCommand extends Command
     {
         foreach ($this->groupCache as $teamdriveId => $groups) {
             /**
-             * @var string $role
+             * @var string
              * @var Google_Service_Directory_Group $group
              */
             foreach ($groups as $role => $group) {
@@ -256,7 +257,6 @@ class AssignWithGroupCommand extends Command
 
         return null;
     }
-
 
     private function checkPermissionsForTeamdrive(Google_Service_Drive_TeamDrive $teamDrive): void
     {
@@ -278,7 +278,8 @@ class AssignWithGroupCommand extends Command
 
         /**
          * for every role and group for this teamdrive
-         * @var string $role
+         *
+         * @var string
          * @var Google_Service_Directory_Group $group
          */
         foreach ($this->groupCache[$teamDrive->getName()] as $role => $group) {
@@ -308,7 +309,7 @@ class AssignWithGroupCommand extends Command
                 if (in_array($teamDrive->getName(), $user->whitelist, true)) {
                     $users[] = $user;
                 }
-            } else if (!$this->isUserExcludedFromTeamDrive($user, $teamDrive->getName())) {
+            } elseif (!$this->isUserExcludedFromTeamDrive($user, $teamDrive->getName())) {
                 $users[] = $user;
             }
         }
@@ -332,7 +333,7 @@ class AssignWithGroupCommand extends Command
     {
         foreach ($this->groupCache as $teamdriveId => $groups) {
             /**
-             * @var string $role
+             * @var string
              * @var Google_Service_Directory_Group $group
              */
             foreach ($groups as $role => $group) {
@@ -354,7 +355,7 @@ class AssignWithGroupCommand extends Command
     {
         /** @var Google_Service_Directory_Member $member */
         foreach ($this->getMembersForGroup($group) as $member) {
-            /** @noinspection NotOptimalIfConditionsInspection */
+            /* @noinspection NotOptimalIfConditionsInspection */
             if ($this->isMailEquals($member->getEmail(), $user->mail) && $groupRole !== $user->role) {
                 $this->googleGroupService->removeMemberFromGroup($group, $member);
                 break;
@@ -376,6 +377,7 @@ class AssignWithGroupCommand extends Command
         return new Promise(function (callable $resolver, callable $canceler) use ($teamDrive, $role) {
             if (isset($this->groupCache[$teamDrive->getName()][$role])) {
                 $resolver($this->groupCache[$teamDrive->getName()][$role]);
+
                 return;
             }
 

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Application;
@@ -6,7 +6,6 @@ use Symfony\Component\Console\DependencyInjection\AddConsoleCommandPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use TeamdriveManager\Service\GoogleIamService;
 use TeamdriveManager\Struct\User;
 
 require_once 'vendor/autoload.php';
@@ -31,11 +30,9 @@ $containerBuilder
     ->register(Google_Service_Directory::class, Google_Service_Directory::class)
     ->addArgument(new Reference(Google_Client::class));
 
-
 $containerBuilder
     ->register(Google_Service_Iam::class, Google_Service_Iam::class)
     ->addArgument(new Reference(Google_Client::class));
-
 
 $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__ . DIRECTORY_SEPARATOR . 'config'));
 $loader->load('services.yaml');

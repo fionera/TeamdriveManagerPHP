@@ -1,16 +1,13 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Drive;
 
-use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
-use TeamdriveManager\Service\TeamDriveService;
 
 class DownloadFileCommand extends Command
 {
@@ -30,25 +27,6 @@ class DownloadFileCommand extends Command
         parent::__construct();
         $this->googleDriveService = $googleDriveServiceService;
         $this->config = $config;
-    }
-
-
-    protected function configure()
-    {
-        $this
-            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
-    }
-
-
-    private function getFileID(string $string)
-    {
-        $parsed = parse_url($string);
-
-        if (isset($parsed['query'])) {
-            return str_replace('id=', '', $parsed['query']);
-        }
-
-        return str_replace(['/file/d/', '/view'], '', $parsed['path']);
     }
 
 //    private function downloadFile(Response $response, Google_Service_Drive_DriveFile $fileInformation)
@@ -127,5 +105,22 @@ class DownloadFileCommand extends Command
 //        }, function ($e) {
 //            var_dump($e);
 //        });
+    }
+
+    protected function configure()
+    {
+        $this
+            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
+    }
+
+    private function getFileID(string $string)
+    {
+        $parsed = parse_url($string);
+
+        if (isset($parsed['query'])) {
+            return str_replace('id=', '', $parsed['query']);
+        }
+
+        return str_replace(['/file/d/', '/view'], '', $parsed['path']);
     }
 }

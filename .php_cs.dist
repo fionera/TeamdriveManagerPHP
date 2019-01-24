@@ -1,0 +1,60 @@
+<?php
+
+$finder = PhpCsFixer\Finder::create();
+
+return PhpCsFixer\Config::create()
+    ->setUsingCache(false)
+    ->setRules([
+        '@PSR2' => true,
+        '@Symfony' => true,
+        'single_blank_line_before_namespace' => true,
+        'function_typehint_space' => true,
+        'declare_strict_types' => true,
+        'function_declaration' => true,
+        'no_empty_phpdoc' => true,
+        'no_empty_comment' => true,
+        'no_useless_return' => true,
+        'ordered_imports' => true,
+        'phpdoc_add_missing_param_annotation' => [
+            'only_untyped' => false
+        ],
+        'binary_operator_spaces' => [
+          'align_double_arrow' => true
+        ],
+        'phpdoc_no_empty_return' => true,
+        'phpdoc_order' => true,
+        'phpdoc_types' => true,
+        'phpdoc_scalar' => true,
+        'phpdoc_no_package' => false,
+        'trailing_comma_in_multiline_array' => false,
+        'single_quote' => true,
+        'return_type_declaration' => true,
+
+        'class_attributes_separation' => [],
+        'no_blank_lines_after_class_opening' => true,
+        'phpdoc_return_self_reference' => true,
+        'phpdoc_trim' => true,
+        'blank_line_before_return' => true,
+        'whitespace_after_comma_in_array' => true,
+        'is_null' => true,
+        'no_spaces_after_function_name' => true,
+        'no_trailing_whitespace' => true,
+        'no_trailing_whitespace_in_comment' => true,
+        'strict_comparison' => true,
+        'no_blank_lines_after_phpdoc' => true,
+        'phpdoc_single_line_var_spacing' => true,
+        'phpdoc_var_without_name' => true,
+        'cast_spaces' => true,
+        'class_definition' => array('singleLine' => true),
+        'self_accessor' => true,
+        'logical_operators' => true,
+        'no_useless_else' => true,
+        'ordered_class_elements' => true,
+        'phpdoc_summary' => false,
+        'blank_line_after_opening_tag' => false,
+        'concat_space' => ['spacing' => 'one'],
+        'array_syntax' => ['syntax' => 'short'],
+        'yoda_style' => ['equal' => false, 'identical' => false, 'less_and_greater' => false],
+    ])
+    ->setRiskyAllowed(true)
+    ->setFinder($finder);

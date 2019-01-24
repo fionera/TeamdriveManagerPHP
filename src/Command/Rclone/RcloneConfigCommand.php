@@ -1,16 +1,13 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Rclone;
 
-use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
-use TeamdriveManager\Service\TeamDriveService;
 
 class RcloneConfigCommand extends Command
 {
@@ -32,14 +29,6 @@ class RcloneConfigCommand extends Command
         $this->config = $config;
     }
 
-
-    protected function configure()
-    {
-        $this
-            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
-    }
-
-
     public function run(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
@@ -57,5 +46,11 @@ class RcloneConfigCommand extends Command
 //
 //            file_put_contents('rclone.conf', $configFileString);
 //        });
+    }
+
+    protected function configure()
+    {
+        $this
+            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
     }
 }

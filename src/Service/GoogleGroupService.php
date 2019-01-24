@@ -10,7 +10,6 @@ use React\Promise\PromiseInterface;
 
 class GoogleGroupService
 {
-
     /**
      * @var Google_Service_Drive
      */
@@ -22,8 +21,9 @@ class GoogleGroupService
 
     /**
      * GoogleRequestQueue constructor.
+     *
      * @param Google_Service_Directory $directoryService
-     * @param RequestQueue $requestQueue
+     * @param RequestQueue             $requestQueue
      */
     public function __construct(Google_Service_Directory $directoryService, RequestQueue $requestQueue)
     {

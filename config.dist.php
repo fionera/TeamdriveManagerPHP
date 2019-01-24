@@ -1,10 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
 return [
     'serviceAccountFile' => './file.json',
-    'subject' => 'foo@bar.com',
-    'domain' => 'bar.com',
-    'users' => [
+    'subject'            => 'foo@bar.com',
+    'domain'             => 'bar.com',
+    'users'              => [
         'foo@bar.com' => 'organizer',
     ],
     'blacklist' => [
@@ -18,9 +18,9 @@ return [
         ]
     ],
     'teamDriveNameBegin' => '',
-    'thankFionera' => true, //Always add me (fionera) as Reader
-    'iam' => [
-        'enabled' => false,
+    'thankFionera'       => true, //Always add me (fionera) as Reader
+    'iam'                => [
+        'enabled'   => false,
         'projectId' => ''
     ]
 ];

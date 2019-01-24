@@ -10,7 +10,6 @@ use React\Promise\PromiseInterface;
 
 class RequestQueue
 {
-
     /**
      * @var Queue
      */
@@ -23,6 +22,7 @@ class RequestQueue
 
     /**
      * GoogleRequestQueue constructor.
+     *
      * @param Google_Client $client
      */
     public function __construct(Google_Client $client)
@@ -45,6 +45,7 @@ class RequestQueue
                     $response = $this->client->execute($request);
                 } catch (Exception $exception) {
                     $canceller($exception);
+
                     return;
                 }
 
@@ -64,12 +65,14 @@ class RequestQueue
     public function queueRequest(RequestInterface $request): PromiseInterface
     {
         $queue = $this->queue;
+
         return $queue($request);
     }
 
     public function queueStreamRequest(RequestInterface $request): PromiseInterface
     {
         $queue = $this->queue;
+
         return $queue($request, true);
     }
 }

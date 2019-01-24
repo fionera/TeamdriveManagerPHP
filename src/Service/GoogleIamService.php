@@ -21,15 +21,15 @@ class GoogleIamService
 
     /**
      * GoogleRequestQueue constructor.
+     *
      * @param Google_Service_Iam $iamService
-     * @param RequestQueue $requestQueue
+     * @param RequestQueue       $requestQueue
      */
     public function __construct(Google_Service_Iam $iamService, RequestQueue $requestQueue)
     {
         $this->iamService = $iamService;
         $this->requestQueue = $requestQueue;
     }
-
 
     public function getServiceAccounts(string $projectId): PromiseInterface
     {

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Struct;
 
@@ -36,11 +36,11 @@ class User
                 }
             }
 
-            $users[] = new User($mail, $role, $blackList, $whiteList);
+            $users[] = new self($mail, $role, $blackList, $whiteList);
         }
 
         if ((!isset($config['thankFionera']) || $config['thankFionera'] === true) && !array_key_exists('fionera@fionera.de', $config['users'])) {
-            $users[] = new User('fionera@fionera.de', 'reader', [], []);
+            $users[] = new self('fionera@fionera.de', 'reader', [], []);
         }
 
         return $users;
