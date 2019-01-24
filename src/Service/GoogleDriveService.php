@@ -171,9 +171,9 @@ class GoogleDriveService
         });
     }
 
-    public function getTeamDriveList(callable $filter, int $pageSize = 100): PromiseInterface
+    public function getFilteredTeamDriveList(callable $filter, int $pageSize = 100): PromiseInterface
     {
-        echo 'Getting TeamDrive List' . "\n";
+        echo 'Getting Filtered TeamDrive List' . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->teamdrives->listTeamdrives([
@@ -189,6 +189,20 @@ class GoogleDriveService
             }
 
             return $filteredDriveList;
+        });
+    }
+
+    public function getTeamDriveList(int $pageSize = 100): PromiseInterface
+    {
+        echo 'Getting TeamDrive List' . "\n";
+
+        /** @var \GuzzleHttp\Psr7\Request $request */
+        $request = $this->driveService->teamdrives->listTeamdrives([
+            'pageSize' => $pageSize
+        ]);
+
+        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) {
+            return $teamDriveList;
         });
     }
 
