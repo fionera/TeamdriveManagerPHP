@@ -116,13 +116,13 @@ class AssignWithGroupCommand extends Command
 
 
         // Request all Teamdrives and filter them
-        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+        $this->googleDriveService->getFilteredTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
         })->then(function (array $teamDriveArray) { // Check the Permissions for every Teamdrive with group and user check
             array_map([$this, 'checkPermissionsForTeamdrive'], $teamDriveArray);
         });
 
-        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+        $this->googleDriveService->getFilteredTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
         })->then(function (array $teamDriveArray) {
             foreach ($teamDriveArray as $teamDrive) {

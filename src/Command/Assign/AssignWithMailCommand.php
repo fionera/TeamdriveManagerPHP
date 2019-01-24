@@ -41,7 +41,7 @@ class AssignWithMailCommand extends Command
 
     public function run(InputInterface $input, OutputInterface $output)
     {
-        $this->driveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+        $this->driveService->getFilteredTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return strpos($teamDrive->getName(), $this->config['teamDriveNameBegin']) === 0;
         })->then(function (array $teamDriveArray) {
             foreach ($teamDriveArray as $teamDrive) {
