@@ -2,12 +2,13 @@
 
 namespace TeamdriveManager\Command\Rclone;
 
+use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
+use TeamdriveManager\Service\RcloneConfigService;
 
 class RcloneConfigCommand extends Command
 {
@@ -21,36 +22,30 @@ class RcloneConfigCommand extends Command
      * @var array
      */
     private $config;
+    /**
+     * @var RcloneConfigService
+     */
+    private $rcloneConfigService;
 
-    public function __construct(GoogleDriveService $googleDriveServiceService, array $config)
+    public function __construct(GoogleDriveService $googleDriveServiceService, RcloneConfigService $rcloneConfigService, array $config)
     {
         parent::__construct();
         $this->googleDriveService = $googleDriveServiceService;
         $this->config = $config;
+        $this->rcloneConfigService = $rcloneConfigService;
     }
 
-    public function run(InputInterface $input, OutputInterface $output)
-    {
-        $io = new SymfonyStyle($input, $output);
+public
+function run(InputInterface $input, OutputInterface $output)
+{
+    $io = new SymfonyStyle($input, $output);
 
-//        if ($argc === 3) {
-//            $serviceAccountFileName = $argv[2];
-//        } else {
-//            $serviceAccountFileName = $config['serviceAccountFile'];
-//        }
-//
-//        $googleRequestQueue->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) use ($teamDriveNameBegin) {
-//            return strpos($teamDrive->getName(), $teamDriveNameBegin) === 0;
-//        })->then(function (array $teamDriveArray) use ($serviceAccountFileName, $cloneConfigManager) {
-//            $configFileString = $cloneConfigManager->createRcloneEntriesForTeamDriveList($teamDriveArray, $serviceAccountFileName);
-//
-//            file_put_contents('rclone.conf', $configFileString);
-//        });
-    }
+    $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+        return true;
+    })->then(function (array $teamDriveArray) {
+        $configFileString = $this->rcloneConfigService->createRcloneEntriesForTeamDriveList($teamDriveArray, '');
 
-    protected function configure()
-    {
-        $this
-            ->addOption('name', '-n', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive');
-    }
+        file_put_contents('rclone.conf', $configFileString);
+    });
+}
 }
