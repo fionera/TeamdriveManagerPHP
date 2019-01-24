@@ -1,5 +1,4 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Service;
 
@@ -9,7 +8,8 @@ class RcloneConfigService
 {
     /**
      * @param Google_Service_Drive_TeamDrive[] $teamDriveArray
-     * @param string $serviceAccountFileName
+     * @param string                           $serviceAccountFileName
+     *
      * @return string
      */
     public function createRcloneEntriesForTeamDriveList(array $teamDriveArray, string $serviceAccountFileName): string

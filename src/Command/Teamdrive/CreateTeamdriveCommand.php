@@ -1,5 +1,4 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Teamdrive;
 
@@ -30,15 +29,6 @@ class CreateTeamdriveCommand extends Command
         $this->config = $config;
     }
 
-
-    protected function configure()
-    {
-        $this
-            ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive')
-            ->addOption('prefix', '-p', InputOption::VALUE_NONE, 'Should the prefix be added');
-    }
-
-
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
@@ -54,5 +44,12 @@ class CreateTeamdriveCommand extends Command
 
         $this->googleDriveService->createTeamDrive($name)->then(function () use ($name) {
         });
+    }
+
+    protected function configure()
+    {
+        $this
+            ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive')
+            ->addOption('prefix', '-p', InputOption::VALUE_NONE, 'Should the prefix be added');
     }
 }

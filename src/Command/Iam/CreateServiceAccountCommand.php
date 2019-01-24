@@ -1,5 +1,4 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Iam;
 
@@ -41,7 +40,6 @@ class CreateServiceAccountCommand extends Command
             ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1);
     }
 
-
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
@@ -50,6 +48,7 @@ class CreateServiceAccountCommand extends Command
 
         if ($iam['enabled'] !== true) {
             $output->writeln('IAM is disabled. Please enable it for use.');
+
             return;
         }
 
@@ -60,7 +59,7 @@ class CreateServiceAccountCommand extends Command
 
         $amount = $input->getOption('amount');
 
-        for ($i = 1; $i < $amount + 1; $i++) {
+        for ($i = 1; $i < $amount + 1; ++$i) {
             $name = str_replace('INDEX', $i, $inputName);
 
             $this->iamService->createServiceAccount($iam['projectId'], $name)->then(function (Google_Service_Iam_ServiceAccount $serviceAccount) use ($output, $input, $i) {
