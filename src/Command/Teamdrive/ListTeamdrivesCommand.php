@@ -1,17 +1,12 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace TeamdriveManager\Command\Teamdrive;
 
 use Google_Service_Drive_Permission;
-use Google_Service_Drive_PermissionList;
 use Google_Service_Drive_TeamDrive;
-use React\Promise\Promise;
-use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
 
 class ListTeamdrivesCommand extends Command
@@ -24,56 +19,45 @@ class ListTeamdrivesCommand extends Command
     private $googleDriveService;
 
     /**
-     * @var array
-     */
-    private $config;
-
-    /**
      * @var Google_Service_Drive_TeamDrive[]
      */
     private $teamDrives;
 
-    /**
-     * @var Google_Service_Drive_Permission[]
-     */
-    private $permissionList;
-
-    public function __construct(GoogleDriveService $googleDriveServiceService, array $config)
+    public function __construct(GoogleDriveService $googleDriveServiceService)
     {
         parent::__construct();
         $this->googleDriveService = $googleDriveServiceService;
-        $this->config = $config;
     }
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
-
-        $this->googleDriveService->getTeamDriveList()->done(function ($result) {
-
-            /** @var Google_Service_Drive_TeamDrive[] $teamdrives */
-            $this->teamDrives = $result['teamDrives'];
-
+        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) use ($output) {
+            return true; //Return true since we want all Teamdrives
+        })->then(function (array $teamDrives) use ($output) {
+            array_map([$this, 'getPermissionsForTeamDrive'], $teamDrives);
         });
 
-        /** @var Google_Service_Drive_TeamDrive $teamdrive */
-        foreach ($this->teamDrives as $teamdrive) {
-            $this->googleDriveService->getPermissionArray($teamdrive)
-                ->done(function ($result) use ($teamdrive) {
-                   $this->permissionList[$teamdrive->getName()] = $result;
-                });
-        }
-
-        /** @var Google_Service_Drive_Permission[] $permission */
-        foreach ($this->permissionList as $name => $permissions) {
-
-            echo 'Permissions for TeamDrive "' . $name . '":' . PHP_EOL;
+        /**
+         * @var Google_Service_Drive_TeamDrive
+         * @var Google_Service_Drive_Permission[] $permissions
+         */
+        foreach ($this->teamDrives as $teamDrive => $permissions) {
+            $output->writeln('Permissions for TeamDrive "' . $teamDrive->getName() . '":');
 
             /** @var Google_Service_Drive_Permission $permission */
             foreach ($permissions as $permission) {
-                echo "\t" . $permission->getRole() . ' - ' . $permission->getEmailAddress() . PHP_EOL;
+                $output->writeln("\t" . $permission->getRole() . ' - ' . $permission->getEmailAddress());
             }
-
         }
+    }
 
+    private function getPermissionsForTeamDrive(Google_Service_Drive_TeamDrive $teamDrive)
+    {
+        $this->teamDrives[$teamDrive->getName()] = [];
+        $this->googleDriveService->getPermissionArray($teamDrive)->then(function (array $permissions) use ($teamDrive) {
+            array_map(function (Google_Service_Drive_Permission $permission) use ($teamDrive) {
+                $this->teamDrives[$teamDrive->getName()][] = $permission;
+            }, $permissions);
+        });
     }
 }
