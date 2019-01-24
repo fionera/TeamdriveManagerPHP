@@ -31,9 +31,9 @@ class ListTeamdrivesCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) use ($output) {
+        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
             return true; //Return true since we want all Teamdrives
-        })->then(function (array $teamDrives) use ($output) {
+        })->then(function (array $teamDrives) {
             array_map([$this, 'getPermissionsForTeamDrive'], $teamDrives);
         });
 
@@ -41,8 +41,8 @@ class ListTeamdrivesCommand extends Command
          * @var Google_Service_Drive_TeamDrive
          * @var Google_Service_Drive_Permission[] $permissions
          */
-        foreach ($this->teamDrives as $teamDrive => $permissions) {
-            $output->writeln('Permissions for TeamDrive "' . $teamDrive->getName() . '":');
+        foreach ($this->teamDrives as $teamDriveName => $permissions) {
+            $output->writeln('Permissions for TeamDrive "' . $teamDriveName . '":');
 
             /** @var Google_Service_Drive_Permission $permission */
             foreach ($permissions as $permission) {
