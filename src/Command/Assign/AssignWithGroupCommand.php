@@ -14,6 +14,7 @@ use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TeamdriveManager\Service\GoogleDriveService;
 use TeamdriveManager\Service\GoogleGroupService;
@@ -67,11 +68,24 @@ class AssignWithGroupCommand extends Command
         $this->users = $users;
     }
 
+    protected function configure(): void
+    {
+        $this
+            ->addOption('groupName', '-G', InputOption::VALUE_OPTIONAL, 'The group name for the service accounts');
+
+    }
+
     public function run(InputInterface $input, OutputInterface $output)
     {
         $iamConfig = $this->config['iam'];
         if ($iamConfig['enabled'] === true) {
-            self::$iamGroupMail = $this->getGroupAddress('serviceaccountsgroup');
+
+            $inputGroupName = $input->getOption('groupName');
+            if ($inputGroupName === null) {
+                $inputGroupName = 'serviceaccountsgroup';
+            }
+
+            self::$iamGroupMail = $this->getGroupAddress($inputGroupName);
 
             $iamGroupPromise = new Promise(function (callable $resolver, callable $canceler) {
                 $this->googleGroupService->getGroupByEmail(self::$iamGroupMail)->then(function (Google_Service_Directory_Group $group) use ($resolver) {
