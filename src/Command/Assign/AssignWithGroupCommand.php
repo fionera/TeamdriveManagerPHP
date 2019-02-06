@@ -75,7 +75,7 @@ class AssignWithGroupCommand extends Command
 
     }
 
-    public function run(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output)
     {
         $iamConfig = $this->config['iam'];
         if ($iamConfig['enabled'] === true) {
