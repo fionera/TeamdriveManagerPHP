@@ -103,25 +103,31 @@ class AssignWithGroupCommand extends Command
             });
 
             $iamGroupPromise->then(function (Google_Service_Directory_Group $group) use ($iamConfig) {
-                $this->googleIamService->getServiceAccounts($iamConfig['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($group) {
-                    $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($serviceAccounts, $group) {
-                        $mails = [];
-                        /** @var Google_Service_Directory_Member $member */
-                        foreach ($members as $member) {
-                            $mails[] = $member->getEmail();
-                        }
+                if (!is_array($iamConfig['projectId'])) {
+                    $iamConfig['projectId'] = [$iamConfig['projectId']];
+                }
 
-                        /** @var Google_Service_Iam_ServiceAccount $account */
-                        foreach ($serviceAccounts->getAccounts() as $account) {
-                            if (!in_array($account->getEmail(), $mails, true)) {
-                                $this->googleGroupService->addMailToGroup($group, $account->getEmail());
+                foreach ($iamConfig['projectId'] as $projectId) {
+                    $this->googleIamService->getServiceAccounts($projectId)->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($group) {
+                        $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($serviceAccounts, $group) {
+                            $mails = [];
+                            /** @var Google_Service_Directory_Member $member */
+                            foreach ($members as $member) {
+                                $mails[] = $member->getEmail();
                             }
-                        }
+
+                            /** @var Google_Service_Iam_ServiceAccount $account */
+                            foreach ($serviceAccounts->getAccounts() as $account) {
+                                if (!in_array($account->getEmail(), $mails, true)) {
+                                    $this->googleGroupService->addMailToGroup($group, $account->getEmail());
+                                }
+                            }
+                        });
+                    }, function (Exception $exception) {
+                        var_dump($exception->getMessage());
+                        echo "An Error Occurred\n";
                     });
-                }, function (Exception $exception) {
-                    var_dump($exception->getMessage());
-                    echo "An Error Occurred\n";
-                });
+                }
 
                 $this->globalGroups[] = $group;
             });
@@ -197,7 +203,7 @@ class AssignWithGroupCommand extends Command
 
     /**
      * @param Google_Service_Drive_Permission[] $permissions
-     * @param Google_Service_Drive_TeamDrive    $teamDrive
+     * @param Google_Service_Drive_TeamDrive $teamDrive
      *
      * @return User[]
      */
