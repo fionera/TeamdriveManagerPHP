@@ -40,14 +40,22 @@ class ListServiceAccountsCommand extends Command
             return;
         }
 
-        $this->iamService->getServiceAccounts($iam['projectId'])->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($output) {
-            /** @var Google_Service_Iam_ServiceAccount $account */
-            foreach ($serviceAccounts->getAccounts() as $account) {
-                $output->writeln($account->getDisplayName());
-            }
-        }, function (Exception $exception) {
-            var_dump($exception->getMessage());
-            echo "An Error Occurred\n";
-        });
+        if (!is_array($iam['projectId'])) {
+            $iam['projectId'] = [$iam['projectId']];
+        }
+
+        foreach ($iam['projectId'] as $projectId) {
+            $this->iamService->getServiceAccounts($projectId)->then(function (Google_Service_Iam_ListServiceAccountsResponse $serviceAccounts) use ($output) {
+                /** @var Google_Service_Iam_ServiceAccount $account */
+                foreach ($serviceAccounts->getAccounts() as $account) {
+                    $output->writeln($account->getDisplayName());
+                }
+            }, function (Exception $exception) {
+                var_dump($exception->getMessage());
+                echo "An Error Occurred\n";
+            });
+        }
+
+
     }
 }

@@ -37,7 +37,9 @@ class CreateServiceAccountCommand extends Command
         $this
             ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Service Account')
             ->addOption('fileName', '-f', InputOption::VALUE_REQUIRED, 'The filename for the Key')
-            ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1);
+            ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1)
+            ->addOption('projectId', '-p', InputOption::VALUE_OPTIONAL, 'The Project ID')
+        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -58,6 +60,14 @@ class CreateServiceAccountCommand extends Command
         }
 
         $amount = $input->getOption('amount');
+
+        if (is_array($iam['projectId'])) {
+            $iam['projectId'] = $iam['projectId'][0];
+        }
+
+        if ($input->hasOption('projectId') === true) {
+            $iam['projectId'] = $input->getOption('projectId');
+        }
 
         for ($i = 1; $i < $amount + 1; ++$i) {
             $name = str_replace('INDEX', $i, $inputName);
