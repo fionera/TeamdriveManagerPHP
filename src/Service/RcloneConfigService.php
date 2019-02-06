@@ -40,8 +40,28 @@ team_drive = $teamDrive->id
 EOF;
     }
 
-    public function getRcloneEntryName(Google_Service_Drive_TeamDrive $teamDrive)
+    public function getRcloneEntryName(Google_Service_Drive_TeamDrive $teamDrive): string
     {
-        return str_replace([' - ', ' / ', '/', '-', ' ', '.'], ['_', '_', '', '', '-', '-'], $teamDrive->getName());
+        return $this->convertTeamDriveName($teamDrive->getName());
+    }
+
+    public function convertTeamDriveName(String $string): string
+    {
+        /** @var array $replaceChars */
+        $replaceChars = array(
+            'ä' => 'ae',
+            'ö' => 'oe',
+            'ü' => 'ue',
+            'Ä' => 'Ae',
+            'Ö' => 'Oe',
+            'Ü' => 'Ue',
+            'ß' => 'ss',
+            '.' => '-',
+        );
+
+        $string = str_replace(array_keys($replaceChars), array_values($replaceChars), $string);
+        $string = preg_replace('#[^a-zA-Z0-9\-_]#', '',  $string);
+
+        return $string;
     }
 }
