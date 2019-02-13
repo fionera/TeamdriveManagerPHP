@@ -39,6 +39,7 @@ class CreateServiceAccountCommand extends Command
             ->addOption('fileName', '-f', InputOption::VALUE_REQUIRED, 'The filename for the Key')
             ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1)
             ->addOption('projectId', '-p', InputOption::VALUE_OPTIONAL, 'The Project ID')
+            ->setDescription('Create one or multiple Service Accounts')
         ;
     }
 

@@ -71,7 +71,8 @@ class AssignWithGroupCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('groupName', '-G', InputOption::VALUE_OPTIONAL, 'The group name for the service accounts');
+            ->addOption('groupName', '-G', InputOption::VALUE_OPTIONAL, 'The group name for the service accounts')
+            ->setDescription('Assign the Permissions to the Teamdrives with Google Groups');
 
     }
 
