@@ -18,6 +18,11 @@ class ListGroupMembers extends Command
      */
     private $googleGroupService;
 
+    protected function configure()
+    {
+        $this->setDescription('Get all members for a Group');
+    }
+
     public function __construct(GoogleGroupService $googleGroupService)
     {
         parent::__construct();

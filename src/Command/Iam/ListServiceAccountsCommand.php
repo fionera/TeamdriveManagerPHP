@@ -23,6 +23,11 @@ class ListServiceAccountsCommand extends Command
      */
     private $iamService;
 
+    protected function configure()
+    {
+        $this->setDescription('List all Service Accounts');
+    }
+
     public function __construct(array $config, GoogleIamService $iamService)
     {
         parent::__construct();

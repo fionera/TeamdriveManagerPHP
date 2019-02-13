@@ -27,6 +27,11 @@ class RcloneConfigCommand extends Command
      */
     private $rcloneConfigService;
 
+    protected function configure()
+    {
+        $this->setDescription('Create a Rclone Config file for all Teamdrives your User has access to');
+    }
+
     public function __construct(GoogleDriveService $googleDriveServiceService, RcloneConfigService $rcloneConfigService, array $config)
     {
         parent::__construct();
@@ -35,17 +40,16 @@ class RcloneConfigCommand extends Command
         $this->rcloneConfigService = $rcloneConfigService;
     }
 
-public
-function run(InputInterface $input, OutputInterface $output)
-{
-    $io = new SymfonyStyle($input, $output);
+    public function run(InputInterface $input, OutputInterface $output)
+    {
+        $io = new SymfonyStyle($input, $output);
 
-    $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
-        return true;
-    })->then(function (array $teamDriveArray) {
-        $configFileString = $this->rcloneConfigService->createRcloneEntriesForTeamDriveList($teamDriveArray, '');
+        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+            return true;
+        })->then(function (array $teamDriveArray) {
+            $configFileString = $this->rcloneConfigService->createRcloneEntriesForTeamDriveList($teamDriveArray, '');
 
-        file_put_contents('rclone.conf', $configFileString);
-    });
-}
+            file_put_contents('rclone.conf', $configFileString);
+        });
+    }
 }
