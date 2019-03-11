@@ -63,10 +63,10 @@ class CreateServiceAccountCommand extends Command
 
         if (is_array($iam['projectId'])) {
             $iam['projectId'] = $iam['projectId'][0];
-        } elseif ($input->getOption('projectId') !== null) {
+        }
+
+        if ($input->hasOption('projectId') === true) {
             $iam['projectId'] = $input->getOption('projectId');
-        } else {
-            $iam['projectId'] = $io->ask('Project ID/Name');
         }
 
         for ($i = 1; $i < $amount + 1; ++$i) {
