@@ -8,15 +8,19 @@ class RcloneConfigService
 {
     /**
      * @param Google_Service_Drive_TeamDrive[] $teamDriveArray
-     * @param string                           $serviceAccountFileName
-     *
+     * @param string $serviceAccountFileName
+     * @param string $serviceAccountFolder
      * @return string
      */
-    public function createRcloneEntriesForTeamDriveList(array $teamDriveArray, string $serviceAccountFileName): string
+    public function createRcloneEntriesForTeamDriveList(array $teamDriveArray, string $serviceAccountFileName, string $serviceAccountFolder = ''): string
     {
         $rcloneConfigString = '';
         foreach ($teamDriveArray as $teamDrive) {
-            $rcloneConfigString .= $this->createRcloneConfig($teamDrive, $serviceAccountFileName);
+            if ($serviceAccountFolder !== '') {
+                $rcloneConfigString .= $this->createPatchedRcloneConfig($teamDrive, $serviceAccountFolder);
+            } else {
+                $rcloneConfigString .= $this->createRcloneConfig($teamDrive, $serviceAccountFileName);
+            }
         }
 
         return $rcloneConfigString;
@@ -34,6 +38,21 @@ client_secret =
 scope = drive
 root_folder_id =
 service_account_file = $serviceAccountFileName
+team_drive = $teamDrive->id
+
+
+EOF;
+    }
+
+    public function createPatchedRcloneConfig(Google_Service_Drive_TeamDrive $teamDrive, string $serviceAccountFolder): string
+    {
+        $name = $this->getRcloneEntryName($teamDrive);
+
+        return <<<EOF
+[$name]
+type = drive
+scope = drive
+service_account_folder = $serviceAccountFolder
 team_drive = $teamDrive->id
 
 
