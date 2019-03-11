@@ -29,6 +29,7 @@ class CreateTeamdriveCommand extends Command
         $this->config = $config;
     }
 
+
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
@@ -50,6 +51,8 @@ class CreateTeamdriveCommand extends Command
     {
         $this
             ->addOption('name', '-N', InputOption::VALUE_REQUIRED, 'The name for the Teamdrive')
-            ->addOption('prefix', '-p', InputOption::VALUE_NONE, 'Should the prefix be added');
+            ->addOption('prefix', '-p', InputOption::VALUE_NONE, 'Should the prefix be added')
+            ->setDescription('Create a Teamdrive with a given Name')
+        ;
     }
 }
