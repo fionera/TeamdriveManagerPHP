@@ -5,6 +5,7 @@ namespace TeamdriveManager\Command\Rclone;
 use Google_Service_Drive_TeamDrive;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TeamdriveManager\Service\GoogleDriveService;
@@ -35,17 +36,23 @@ class RcloneConfigCommand extends Command
         $this->rcloneConfigService = $rcloneConfigService;
     }
 
-public
-function run(InputInterface $input, OutputInterface $output)
-{
-    $io = new SymfonyStyle($input, $output);
+    protected function configure()
+    {
+        $this
+            ->addOption('sa-folder-path','-P', InputOption::VALUE_REQUIRED, 'The service account folder path.');
+    }
 
-    $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
-        return true;
-    })->then(function (array $teamDriveArray) {
-        $configFileString = $this->rcloneConfigService->createRcloneEntriesForTeamDriveList($teamDriveArray, '');
+    public function execute(InputInterface $input, OutputInterface $output)
+    {
+        $io = new SymfonyStyle($input, $output);
 
-        file_put_contents('rclone.conf', $configFileString);
-    });
-}
+        $path = $input->getOption('sa-folder-path');
+
+        $this->googleDriveService->getTeamDriveList(function (Google_Service_Drive_TeamDrive $teamDrive) {
+            return true;
+        })->then(function (array $teamDriveArray) use ($path) {
+            $configFileString = $this->rcloneConfigService->createRcloneEntriesForTeamDriveList($teamDriveArray, '', $path);
+            file_put_contents('rclone.conf', $configFileString);
+        });
+    }
 }
