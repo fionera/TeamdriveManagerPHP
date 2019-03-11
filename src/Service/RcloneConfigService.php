@@ -8,8 +8,9 @@ class RcloneConfigService
 {
     /**
      * @param Google_Service_Drive_TeamDrive[] $teamDriveArray
-     * @param string $serviceAccountFileName
-     * @param string $serviceAccountFolder
+     * @param string                           $serviceAccountFileName
+     * @param string                           $serviceAccountFolder
+     *
      * @return string
      */
     public function createRcloneEntriesForTeamDriveList(array $teamDriveArray, string $serviceAccountFileName, string $serviceAccountFolder = ''): string
@@ -67,7 +68,7 @@ EOF;
     public function convertTeamDriveName(String $string): string
     {
         /** @var array $replaceChars */
-        $replaceChars = array(
+        $replaceChars = [
             'ä' => 'ae',
             'ö' => 'oe',
             'ü' => 'ue',
@@ -76,10 +77,10 @@ EOF;
             'Ü' => 'Ue',
             'ß' => 'ss',
             '.' => '-',
-        );
+        ];
 
         $string = str_replace(array_keys($replaceChars), array_values($replaceChars), $string);
-        $string = preg_replace('#[^a-zA-Z0-9\-_]#', '',  $string);
+        $string = preg_replace('#[^a-zA-Z0-9\-_]#', '', $string);
 
         return $string;
     }

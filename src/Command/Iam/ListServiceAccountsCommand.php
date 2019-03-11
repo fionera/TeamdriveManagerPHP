@@ -60,7 +60,5 @@ class ListServiceAccountsCommand extends Command
                 echo "An Error Occurred\n";
             });
         }
-
-
     }
 }

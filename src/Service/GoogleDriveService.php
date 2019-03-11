@@ -177,7 +177,7 @@ class GoogleDriveService
 
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->teamdrives->listTeamdrives([
-            'pageSize' => $pageSize,
+            'pageSize'  => $pageSize,
             'pageToken' => $pageToken,
         ]);
 
