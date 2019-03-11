@@ -23,6 +23,11 @@ class ListTeamdrivesCommand extends Command
      */
     private $teamDrives;
 
+    protected function configure()
+    {
+        $this->setDescription('List all Teamdrives that you have access to');
+    }
+
     public function __construct(GoogleDriveService $googleDriveServiceService)
     {
         parent::__construct();

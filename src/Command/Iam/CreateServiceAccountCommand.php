@@ -39,6 +39,7 @@ class CreateServiceAccountCommand extends Command
             ->addOption('fileName', '-f', InputOption::VALUE_REQUIRED, 'The filename for the Key')
             ->addOption('amount', '-a', InputOption::VALUE_OPTIONAL, 'The amount of accounts to create', 1)
             ->addOption('projectId', '-p', InputOption::VALUE_OPTIONAL, 'The Project ID')
+            ->setDescription('Create one or multiple Service Accounts')
         ;
     }
 
@@ -65,7 +66,7 @@ class CreateServiceAccountCommand extends Command
             $iam['projectId'] = $iam['projectId'][0];
         }
 
-        if ($input->hasOption('projectId') === true) {
+        if ($input->getOption('projectId') !== null) {
             $iam['projectId'] = $input->getOption('projectId');
         }
 
