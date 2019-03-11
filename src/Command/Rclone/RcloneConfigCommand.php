@@ -28,11 +28,6 @@ class RcloneConfigCommand extends Command
      */
     private $rcloneConfigService;
 
-    protected function configure()
-    {
-        $this->setDescription('Create a Rclone Config file for all Teamdrives your User has access to');
-    }
-
     public function __construct(GoogleDriveService $googleDriveServiceService, RcloneConfigService $rcloneConfigService, array $config)
     {
         parent::__construct();
@@ -44,6 +39,7 @@ class RcloneConfigCommand extends Command
 
     protected function configure()
     {
+        $this->setDescription('Create a Rclone Config file for all Teamdrives your User has access to');
         $this
             ->addOption('sa-folder-path','-P', InputOption::VALUE_REQUIRED, 'The service account folder path.');
     }
