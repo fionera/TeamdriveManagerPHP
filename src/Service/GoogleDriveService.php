@@ -171,21 +171,28 @@ class GoogleDriveService
         });
     }
 
-    public function getTeamDriveList(callable $filter, int $pageSize = 100): PromiseInterface
+    public function getTeamDriveList(callable $filter, int $pageSize = 100, string $pageToken = '', array $filteredDriveList = null): PromiseInterface
     {
         echo 'Getting Filtered TeamDrive List' . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->teamdrives->listTeamdrives([
-            'pageSize' => $pageSize
+            'pageSize' => $pageSize,
+            'pageToken' => $pageToken,
         ]);
 
-        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) use ($filter) {
-            $filteredDriveList = [];
+        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Drive_TeamDriveList $teamDriveList) use ($filter, $filteredDriveList) {
             foreach ($teamDriveList as $teamDrive) {
                 if ($filter($teamDrive) === true) {
                     $filteredDriveList[] = $teamDrive;
                 }
+            }
+
+            /** @var string $nextPageToken */
+            $nextPageToken = $teamDriveList->getNextPageToken();
+
+            if ($nextPageToken !== null && $nextPageToken !== '') {
+                return $this->getTeamDriveList($filter, 100, $nextPageToken, $filteredDriveList);
             }
 
             return $filteredDriveList;
