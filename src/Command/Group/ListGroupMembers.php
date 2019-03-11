@@ -3,7 +3,6 @@
 namespace TeamdriveManager\Command\Group;
 
 use Google_Service_Directory_Group;
-use Google_Service_Directory_Members;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,8 +34,8 @@ class ListGroupMembers extends Command
 
         $address = $io->ask('Group Address');
 
-        $this->googleGroupService->getGroupByEmail($address)->then(function (Google_Service_Directory_Group $group) use ($output, $address) {
-            $this->googleGroupService->getMembersForGroup($group)->then(function (Google_Service_Directory_Members $members) use ($output) {
+        $this->googleGroupService->getGroupByEmail($address)->then(function (Google_Service_Directory_Group $group) use ($output) {
+            $this->googleGroupService->getMembersForGroup($group)->then(function (array $members) use ($output) {
                 /** @var \Google_Service_Directory_Member $member */
                 foreach ($members as $member) {
                     if ($member->getEmail() === null) {

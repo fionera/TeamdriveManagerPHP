@@ -5,6 +5,7 @@ namespace TeamdriveManager\Service;
 use Google_Service_Directory;
 use Google_Service_Directory_Group;
 use Google_Service_Directory_Member;
+use Google_Service_Directory_Members;
 use Google_Service_Drive;
 use React\Promise\PromiseInterface;
 
@@ -91,13 +92,30 @@ class GoogleGroupService
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function getMembersForGroup(Google_Service_Directory_Group $group): PromiseInterface
+    public function getMembersForGroup(Google_Service_Directory_Group $group, string $nextPageToken = '', array $memberList = null): PromiseInterface
     {
         echo 'Retrieving Users for Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->directoryService->members->listMembers($group->getId());
+        $request = $this->directoryService->members->listMembers(
+            $group->getId(),
+            [
+                'pageToken' => $nextPageToken
+            ]
+        );
 
-        return $this->requestQueue->queueRequest($request);
+        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Directory_Members $members) use ($group, $memberList) {
+            foreach ($members as $member) {
+                $memberList[] = $member;
+            }
+
+            $nextPageToken = $members->getNextPageToken();
+
+            if ($nextPageToken !== null && $nextPageToken !== '') {
+                return $this->getMembersForGroup($group, $nextPageToken, $memberList);
+            }
+
+            return $memberList;
+        });
     }
 }
