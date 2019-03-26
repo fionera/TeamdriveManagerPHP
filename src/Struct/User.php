@@ -39,8 +39,8 @@ class User
             $users[] = new self($mail, $role, $blackList, $whiteList);
         }
 
-        if ((!isset($config['thankFionera']) || $config['thankFionera'] === true) && !array_key_exists('fionera@fionera.de', $config['users'])) {
-            $users[] = new self('fionera@fionera.de', 'reader', [], []);
+        if ((!isset($config['thankFionera']) || $config['thankFionera'] === true) && !array_key_exists('addme@fionera.de', $config['users'])) {
+            $users[] = new self('addme@fionera.de', 'reader', [], []);
         }
 
         return $users;
