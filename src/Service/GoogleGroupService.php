@@ -7,6 +7,7 @@ use Google_Service_Directory_Group;
 use Google_Service_Directory_Member;
 use Google_Service_Directory_Members;
 use Google_Service_Drive;
+use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 
 class GoogleGroupService
@@ -24,7 +25,7 @@ class GoogleGroupService
      * GoogleRequestQueue constructor.
      *
      * @param Google_Service_Directory $directoryService
-     * @param RequestQueue             $requestQueue
+     * @param RequestQueue $requestQueue
      */
     public function __construct(Google_Service_Directory $directoryService, RequestQueue $requestQueue)
     {
@@ -92,30 +93,43 @@ class GoogleGroupService
         return $this->requestQueue->queueRequest($request);
     }
 
-    public function getMembersForGroup(Google_Service_Directory_Group $group, string $nextPageToken = '', array $memberList = null): PromiseInterface
+    /**
+     * @param Google_Service_Directory_Group $group
+     * @param string $nextPageToken
+     * @return PromiseInterface
+     */
+    public function getMembersForGroup(Google_Service_Directory_Group $group, string $nextPageToken = ''): PromiseInterface
     {
         echo 'Retrieving Users for Group ' . $group->getName() . ' with Address ' . $group->getEmail() . "\n";
 
+        $params = [];
+
+        if ($nextPageToken !== '') {
+            $params['pageToken'] = $nextPageToken;
+        }
+
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->directoryService->members->listMembers(
-            $group->getId(),
-            [
-                'pageToken' => $nextPageToken
-            ]
-        );
+        $request = $this->directoryService->members->listMembers($group->getId(), $params);
 
-        return $this->requestQueue->queueRequest($request)->then(function (Google_Service_Directory_Members $members) use ($group, $memberList) {
-            foreach ($members as $member) {
-                $memberList[] = $member;
-            }
+        $queuedPromise = $this->requestQueue->queueRequest($request);
 
-            $nextPageToken = $members->getNextPageToken();
+        return new Promise(function (callable $resolve, callable $canceller) use ($queuedPromise, $group) {
+            $queuedPromise->then(function (Google_Service_Directory_Members $members) use ($resolve, $group) {
+                if ($members->getNextPageToken() === null) {
+                    $resolve($members);
+                    return;
+                }
 
-            if ($nextPageToken !== null && $nextPageToken !== '') {
-                return $this->getMembersForGroup($group, $nextPageToken, $memberList);
-            }
+                $this->getMembersForGroup($group, $members->getNextPageToken())->then(function (Google_Service_Directory_Members $recursiveMembers) use ($members, $resolve) {
+                    $newMembers = new Google_Service_Directory_Members();
+                    $newMembers->setMembers(array_merge($members->getMembers(), $recursiveMembers->getMembers()));
 
-            return $memberList;
+                    $resolve($newMembers);
+                });
+
+            }, function ($err) use ($canceller) {
+                $canceller($err);
+            });
         });
     }
 }

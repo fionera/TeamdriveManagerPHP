@@ -28,7 +28,7 @@ class GoogleDriveService
      * GoogleRequestQueue constructor.
      *
      * @param Google_Service_Drive $drive_service
-     * @param RequestQueue         $requestQueue
+     * @param RequestQueue $requestQueue
      */
     public function __construct(Google_Service_Drive $drive_service, RequestQueue $requestQueue)
     {
@@ -44,11 +44,7 @@ class GoogleDriveService
         $newPermission->setRole($user->role);
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->update(
-            $teamDrive->getId(),
-            $permission->getId(),
-            $newPermission,
-            [
+        $request = $this->driveService->permissions->update($teamDrive->getId(), $permission->getId(), $newPermission, [
                 'supportsTeamDrives' => true,
             ]
         );
@@ -64,11 +60,7 @@ class GoogleDriveService
         $newPermission->setRole($role);
 
         /** @var \GuzzleHttp\Psr7\Request $request */
-        $request = $this->driveService->permissions->update(
-            $teamDrive->getId(),
-            $permission->getId(),
-            $newPermission,
-            [
+        $request = $this->driveService->permissions->update($teamDrive->getId(), $permission->getId(), $newPermission, [
                 'supportsTeamDrives' => true,
             ]
         );
@@ -84,12 +76,11 @@ class GoogleDriveService
         $request = $this->driveService->permissions->create(
             $teamDrive->getId(),
             new Google_Service_Drive_Permission([
-                'type'         => 'user',
-                'role'         => $user->role,
+                'type' => 'user',
+                'role' => $user->role,
                 'emailAddress' => $user->mail
-            ]),
-            [
-                'supportsTeamDrives'    => true,
+            ]), [
+                'supportsTeamDrives' => true,
                 'sendNotificationEmail' => false,
             ]
         );
@@ -105,12 +96,11 @@ class GoogleDriveService
         $request = $this->driveService->permissions->create(
             $teamDrive->getId(),
             new Google_Service_Drive_Permission([
-                'type'         => 'group',
-                'role'         => $role,
+                'type' => 'group',
+                'role' => $role,
                 'emailAddress' => $group->getEmail()
-            ]),
-            [
-                'supportsTeamDrives'    => true,
+            ]), [
+                'supportsTeamDrives' => true,
                 'sendNotificationEmail' => false,
             ]
         );
@@ -137,7 +127,7 @@ class GoogleDriveService
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->permissions->get($teamDrive->getId(), $id, [
             'supportsTeamDrives' => true,
-            'fields'             => 'kind,id,emailAddress,domain,role,allowFileDiscovery,displayName,photoLink,expirationTime,teamDrivePermissionDetails,deleted'
+            'fields' => 'kind,id,emailAddress,domain,role,allowFileDiscovery,displayName,photoLink,expirationTime,teamDrivePermissionDetails,deleted'
         ]);
 
         return $this->requestQueue->queueRequest($request);
@@ -171,7 +161,7 @@ class GoogleDriveService
         });
     }
 
-    public function getTeamDriveList(callable $filter, int $pageSize = 100, string $pageToken = '', array $filteredDriveList = null): PromiseInterface
+    public function getTeamDriveList(callable $filter, int $pageSize = 100, string $pageToken = '', $filteredDriveList = []): PromiseInterface
     {
         echo 'Getting Filtered TeamDrive List' . "\n";
 
@@ -233,7 +223,7 @@ class GoogleDriveService
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->driveService->files->get($fileID, [
             'supportsTeamDrives' => true,
-            'alt'                => 'media',
+            'alt' => 'media',
         ]);
 
         return $this->requestQueue->queueStreamRequest($request);
