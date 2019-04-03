@@ -35,7 +35,7 @@ class GoogleIamService
     {
         /** @var \GuzzleHttp\Psr7\Request $request */
         $request = $this->iamService->projects_serviceAccounts->listProjectsServiceAccounts('projects/' . $projectId, [
-            'pageSize' => 400
+            'pageSize' => 100
         ]);
 
         return $this->requestQueue->queueRequest($request);
